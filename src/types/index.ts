@@ -1,4 +1,7 @@
-﻿// Types for the AGROGEN Commercial Agritech application
+// Types for the AGROGEN Commercial Agritech application
+import type { LandUnit, MultiUnitMatrix } from '../engine/landUnits';
+
+export type { LandUnit, MultiUnitMatrix };
 
 export type SoilType = 'loamy' | 'sandy' | 'clay' | 'silt' | 'peat' | 'chalky' | 'black' | 'red';
 export type Season = 'kharif' | 'rabi' | 'zaid' | 'year-round';
@@ -9,11 +12,30 @@ export type Topography = 'flat' | 'sloped' | 'terraced' | 'rolling';
 export type FarmingType = 'conventional' | 'organic' | 'hydroponic' | 'regenerative';
 export type WaterSource = 'borewell' | 'canal' | 'river' | 'rainwater' | 'municipal';
 
+export type AspectOrientation = 'north' | 'south' | 'east' | 'west' | 'south-west' | 'south-east' | 'flat';
+export type MicroRelief = 'floodplain' | 'mid-slope' | 'summit-ridge' | 'lowland-depression' | 'terraced-bench';
+
 export interface FarmInputs {
-  // Farm Profile & Details
+  // Farm Profile & Identification
   farmName?: string;
   location: string;
-  farmArea: number; // in acres
+
+  // Hyper-Specific Micro-Location & Hydro-Geology
+  latitude?: number;
+  longitude?: number;
+  villageOrDistrict?: string;
+  parcelId?: string;
+  soilDepthCm?: number;            // Root zone depth (10 - 250 cm)
+  waterTableDepthMeters?: number;  // Groundwater depth (1 - 200 m)
+  aspectOrientation?: AspectOrientation;
+  slopeDegree?: number;            // Slope in degrees (0 - 45°)
+  microRelief?: MicroRelief;
+
+  // Land Scale & Unit System
+  farmArea: number;                // Raw user input value
+  inputLandUnit?: LandUnit;        // Land unit entered (e.g. 'bigha_std', 'hectares', 'acres')
+  farmAreaAcres?: number;           // Canonical size in Acres for engine calculations
+
   soilType: SoilType;
   topography?: Topography;
   farmingType?: FarmingType;
@@ -97,6 +119,45 @@ export interface SoilAnalysis {
   soilHealthLabel: string;
 }
 
+export interface SpatialHydroGeologyAnalysis {
+  gpsCoordinatesFormatted: string;
+  solarInsolationKwhPerM2: number;
+  slopeRunoffIndex: string;
+  aspectSunExposureImpact: string;
+  rootZoneCapacitanceMm: number;
+  groundwaterRechargeScore: number;
+  microTerrainSuitability: string;
+}
+
+export interface FinancialFeasibilityResearch {
+  currencySymbol: string;
+  estimatedCapExTotal: number;
+  estimatedOpExPerSeason: number;
+  expectedGrossRevenue: number;
+  expectedNetProfit: number;
+  roiPercent: number;
+  paybackPeriodYears: number;
+  costBenefitRatio: number;
+}
+
+export interface AgronomicDeepDiveResearch {
+  topSuitableCrop: string;
+  estimatedYieldPerAcre: string;
+  totalExpectedYield: string;
+  soilNutrientBalanceIndex: number;
+  criticalDeficiencyWarnings: string[];
+  customNutrientRecommendation: string[];
+}
+
+export interface ResearchDossier {
+  spatialAnalysis: SpatialHydroGeologyAnalysis;
+  landUnitsMatrix: MultiUnitMatrix;
+  agronomicDeepDive: AgronomicDeepDiveResearch;
+  financialFeasibility: FinancialFeasibilityResearch;
+  executiveSummaryText: string;
+  keyActionPlan: string[];
+}
+
 export interface AnalysisResult {
   farmSuitabilityScore: number;
   soilScore: number;
@@ -108,6 +169,7 @@ export interface AnalysisResult {
   farmPlan: FarmPlanWeek[];
   rotationSuggestions: RotationSuggestion[];
   inputs: FarmInputs;
+  researchDossier: ResearchDossier;
 }
 
 export interface FarmPlanWeek {
@@ -132,11 +194,11 @@ export interface DayWeatherForecast {
   tempHigh: number;
   tempLow: number;
   condition: 'Sunny' | 'Partly Cloudy' | 'Overcast' | 'Light Rain' | 'Heavy Rain' | 'Thunderstorm';
-  precipitationProb: number; // %
-  rainMm: number;            // predicted daily rainfall in mm
-  humidity: number;          // %
-  windSpeed: number;         // km/h
-  et0: number;               // mm/day (evapotranspiration)
+  precipitationProb: number;
+  rainMm: number;
+  humidity: number;
+  windSpeed: number;
+  et0: number;
 }
 
 export interface WeatherForecastResult {
@@ -146,7 +208,7 @@ export interface WeatherForecastResult {
   humidity: number;
   uvIndex: number;
   sevenDayForecast: DayWeatherForecast[];
-  totalRainfallPredicted7Days: number; // mm
+  totalRainfallPredicted7Days: number;
   heatUnits7Days: number;
   weatherRiskAlert?: string;
   forecastConfidence: string;
@@ -155,15 +217,15 @@ export interface WeatherForecastResult {
 export interface WaterForecast {
   dailyWaterLiters: number;
   dailyWaterGallons: number;
-  weatherAdjustedDailyLiters: number; // liters/day accounting for rain & temp
-  rainCompensationLiters: number;    // liters offset by natural rainfall
+  weatherAdjustedDailyLiters: number;
+  rainCompensationLiters: number;
   weeklyWaterLiters: number;
   seasonalWaterM3: number;
   irrigationFrequency: string;
   recommendedMethod: string;
   waterDeficitStatus: 'Optimal' | 'Mild Deficit' | 'Severe Deficit' | 'Surplus';
   efficiencySavingPct: number;
-  pumpingEnergyKwhDaily: number;     // Energy required for irrigation pumps
+  pumpingEnergyKwhDaily: number;
 }
 
 export interface AmendmentItem {

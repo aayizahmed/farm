@@ -6,6 +6,8 @@ import {
   ShieldAlert, Gauge, MapPin, Sparkles, Sliders,
   Info, BarChart3, AlertTriangle
 } from 'lucide-react';
+import { LAND_UNITS, convertToAcres, getMultiUnitMatrix } from '../engine/landUnits';
+import type { LandUnit } from '../engine/landUnits';
 import type {
   FarmInputs, SoilType, Season, WaterAvailability, Topography,
   FarmingType, WaterSource, InputForecast
@@ -212,6 +214,17 @@ const WATER_SOURCES: { id: WaterSource; label: string }[] = [
   const [activeStep, setActiveStep] = useState<number>(0);
 
   const [inputs, setInputs] = useState<FarmInputs>({
+    latitude: initialInputs?.latitude ?? 36.7783,
+    longitude: initialInputs?.longitude ?? -119.4179,
+    villageOrDistrict: initialInputs?.villageOrDistrict || '',
+    parcelId: initialInputs?.parcelId || 'Plot #A-101',
+    soilDepthCm: initialInputs?.soilDepthCm || 90,
+    waterTableDepthMeters: initialInputs?.waterTableDepthMeters || 18,
+    aspectOrientation: initialInputs?.aspectOrientation || 'south-west',
+    slopeDegree: initialInputs?.slopeDegree || 2.5,
+    microRelief: initialInputs?.microRelief || 'mid-slope',
+    inputLandUnit: initialInputs?.inputLandUnit || 'acres',
+    farmAreaAcres: initialInputs?.farmAreaAcres || 150,
     location: initialInputs?.location || 'Central Valley, California, USA',
     farmArea: initialInputs?.farmArea || 50,
     soilType: initialInputs?.soilType || 'loamy',
@@ -392,7 +405,7 @@ const WATER_SOURCES: { id: WaterSource; label: string }[] = [
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div className="lg:col-span-8 space-y-6">
               <AnimatePresence mode="wait">
-                {/* STEP 1: LAND & LOCATION */}
+                                {/* STEP 1: LAND & LOCATION */}
                 {activeStep === 1 && (
                   <motion.div
                     key="step1"
@@ -406,48 +419,166 @@ const WATER_SOURCES: { id: WaterSource; label: string }[] = [
                         <MapPin className="w-6 h-6" />
                       </div>
                       <div>
-                        <h2 className="text-xl font-bold text-white">Geographical & Land Parameters</h2>
-                        <p className="text-xs text-slate-400">Specify farm location, surface topography, scale, and operational model.</p>
+                        <h2 className="text-xl font-bold text-white">Geographical & Precision Land Parameters</h2>
+                        <p className="text-xs text-slate-400">Configure land scale, multi-unit land size, GPS micro-location, and hydro-geology.</p>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                      {/* Location Input */}
-                      <div className="sm:col-span-2 space-y-2">
+                      {/* Location Input & GPS */}
+                      <div className="sm:col-span-2 space-y-3 bg-slate-950/60 border border-slate-800 p-4 rounded-2xl">
                         <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                          Farm Location / Microclimate Region
+                          Farm Region & Micro-Climate Location
                         </label>
-                        <div className="relative">
-                          <MapPin className="w-5 h-5 absolute left-3.5 top-3.5 text-slate-500" />
-                          <input
-                            type="text"
-                            value={inputs.location}
-                            onChange={(e) => handleInputChange('location', e.target.value)}
-                            placeholder="e.g. Central Valley, California or Punjab, India"
-                            className="w-full pl-11 pr-4 py-3 bg-slate-950/80 border border-slate-700/80 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-sm font-medium"
-                          />
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <div className="sm:col-span-2 relative">
+                            <MapPin className="w-5 h-5 absolute left-3.5 top-3.5 text-slate-500" />
+                            <input
+                              type="text"
+                              value={inputs.location}
+                              onChange={(e) => handleInputChange('location', e.target.value)}
+                              placeholder="e.g. Central Valley, California or Punjab, India"
+                              className="w-full pl-11 pr-4 py-3 bg-slate-950 border border-slate-700/80 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 text-sm font-medium"
+                            />
+                          </div>
+                          <div>
+                            <input
+                              type="text"
+                              value={inputs.villageOrDistrict || ''}
+                              onChange={(e) => handleInputChange('villageOrDistrict', e.target.value)}
+                              placeholder="Village / Sub-District"
+                              className="w-full px-4 py-3 bg-slate-950 border border-slate-700/80 rounded-xl text-white placeholder-slate-500 text-sm"
+                            />
+                          </div>
                         </div>
-                        <span className="text-[11px] text-slate-400">Selected via 3D Globe or customized manually.</span>
+
+                        {/* GPS Coordinates & Parcel ID */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                          <div>
+                            <label className="text-[11px] font-semibold text-slate-400">Field Parcel / Plot ID</label>
+                            <input
+                              type="text"
+                              value={inputs.parcelId || ''}
+                              onChange={(e) => handleInputChange('parcelId', e.target.value)}
+                              placeholder="e.g. Plot #A-101"
+                              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white text-xs"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[11px] font-semibold text-slate-400">GPS Latitude (°N/S)</label>
+                            <input
+                              type="number"
+                              step="0.0001"
+                              value={inputs.latitude ?? 36.7783}
+                              onChange={(e) => handleInputChange('latitude', parseFloat(e.target.value))}
+                              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white text-xs font-mono"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[11px] font-semibold text-slate-400">GPS Longitude (°E/W)</label>
+                            <input
+                              type="number"
+                              step="0.0001"
+                              value={inputs.longitude ?? -119.4179}
+                              onChange={(e) => handleInputChange('longitude', parseFloat(e.target.value))}
+                              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white text-xs font-mono"
+                            />
+                          </div>
+                        </div>
                       </div>
 
-                      {/* Acreage Input */}
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                            Total Farm Area (Acres)
+                      {/* LAND SIZE INPUT & MULTI-UNIT SYSTEM */}
+                      <div className="sm:col-span-2 space-y-4 bg-gradient-to-br from-slate-950 via-slate-950 to-emerald-950/20 border border-emerald-500/30 p-5 rounded-2xl">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <label className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+                            <Layers className="w-4 h-4" />
+                            Land Scale & Multi-Unit Area Converter
                           </label>
-                          <span className="text-xs font-bold text-emerald-400">
-                            {(inputs.farmArea * 0.404686).toFixed(1)} Hectares
+                          <span className="text-[11px] text-slate-400">
+                            Canonical Area: <strong className="text-emerald-300 font-mono">{(inputs.farmAreaAcres || convertToAcres(inputs.farmArea, inputs.inputLandUnit || 'acres')).toFixed(2)} Acres</strong>
                           </span>
                         </div>
-                        <input
-                          type="number"
-                          min="1"
-                          max="10000"
-                          value={inputs.farmArea}
-                          onChange={(e) => handleInputChange('farmArea', Math.max(1, Number(e.target.value)))}
-                          className="w-full px-4 py-3 bg-slate-950/80 border border-slate-700/80 rounded-xl text-white text-sm font-semibold focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
-                        />
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-[11px] text-slate-400 mb-1">Enter Land Size Value</label>
+                            <input
+                              type="number"
+                              min="0.1"
+                              step="0.1"
+                              value={inputs.farmArea}
+                              onChange={(e) => {
+                                const val = Math.max(0.1, Number(e.target.value));
+                                const currentUnit = inputs.inputLandUnit || 'acres';
+                                handleInputChange('farmArea', val);
+                                handleInputChange('farmAreaAcres', convertToAcres(val, currentUnit));
+                              }}
+                              className="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-white text-base font-bold focus:border-emerald-500"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] text-slate-400 mb-1">Select Land Unit Measurement</label>
+                            <select
+                              value={inputs.inputLandUnit || 'acres'}
+                              onChange={(e) => {
+                                const newUnit = e.target.value as LandUnit;
+                                handleInputChange('inputLandUnit', newUnit);
+                                handleInputChange('farmAreaAcres', convertToAcres(inputs.farmArea, newUnit));
+                              }}
+                              className="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm font-semibold focus:border-emerald-500"
+                            >
+                              {LAND_UNITS.map((unit) => (
+                                <option key={unit.id} value={unit.id}>
+                                  {unit.label} ({unit.region})
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* LIVE MULTI-UNIT CONVERSION MATRIX */}
+                        {(() => {
+                          const acres = inputs.farmAreaAcres || convertToAcres(inputs.farmArea, inputs.inputLandUnit || 'acres');
+                          const matrix = getMultiUnitMatrix(acres);
+                          return (
+                            <div className="pt-3 border-t border-slate-800/80">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 block">
+                                Instant Land Conversion Breakdown
+                              </span>
+                              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+                                <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-center">
+                                  <div className="text-[10px] text-slate-400">Acres</div>
+                                  <div className="text-xs font-bold text-emerald-300 font-mono">{matrix.acres} ac</div>
+                                </div>
+                                <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-center">
+                                  <div className="text-[10px] text-slate-400">Hectares</div>
+                                  <div className="text-xs font-bold text-white font-mono">{matrix.hectares} ha</div>
+                                </div>
+                                <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-center">
+                                  <div className="text-[10px] text-slate-400">Sq Meters</div>
+                                  <div className="text-xs font-bold text-white font-mono">{matrix.sqMeters.toLocaleString()} m²</div>
+                                </div>
+                                <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-center">
+                                  <div className="text-[10px] text-slate-400">Sq Feet</div>
+                                  <div className="text-xs font-bold text-white font-mono">{matrix.sqFeet.toLocaleString()} ft²</div>
+                                </div>
+                                <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-center">
+                                  <div className="text-[10px] text-slate-400">Std Bigha</div>
+                                  <div className="text-xs font-bold text-cyan-300 font-mono">{matrix.bighaStandard}</div>
+                                </div>
+                                <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-center">
+                                  <div className="text-[10px] text-slate-400">Guntha</div>
+                                  <div className="text-xs font-bold text-yellow-300 font-mono">{matrix.guntha}</div>
+                                </div>
+                                <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-center">
+                                  <div className="text-[10px] text-slate-400">Cents</div>
+                                  <div className="text-xs font-bold text-teal-300 font-mono">{matrix.cents}</div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
 
                       {/* Crop Focus */}
@@ -458,7 +589,7 @@ const WATER_SOURCES: { id: WaterSource; label: string }[] = [
                         <select
                           value={inputs.cropCategory || 'Orchard'}
                           onChange={(e) => handleInputChange('cropCategory', e.target.value)}
-                          className="w-full px-4 py-3 bg-slate-950/80 border border-slate-700/80 rounded-xl text-white text-sm font-medium focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                          className="w-full px-4 py-3 bg-slate-950/80 border border-slate-700/80 rounded-xl text-white text-sm font-medium focus:outline-none focus:border-emerald-500"
                         >
                           {CROP_CATEGORIES.map((cat) => (
                             <option key={cat} value={cat}>{cat}</option>
@@ -466,10 +597,74 @@ const WATER_SOURCES: { id: WaterSource; label: string }[] = [
                         </select>
                       </div>
 
-                      {/* Topography */}
+                      {/* Aspect Orientation */}
+                      <div className="space-y-2">
+                        <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                          Sun Exposure Aspect Direction
+                        </label>
+                        <select
+                          value={inputs.aspectOrientation || 'south-west'}
+                          onChange={(e) => handleInputChange('aspectOrientation', e.target.value as any)}
+                          className="w-full px-4 py-3 bg-slate-950/80 border border-slate-700/80 rounded-xl text-white text-sm font-medium focus:outline-none focus:border-emerald-500"
+                        >
+                          <option value="south-west">South-West (+12% Solar Radiation Gain)</option>
+                          <option value="south">South Facing (Maximum Solar Thermal)</option>
+                          <option value="east">East Facing (Morning Sun Exposure)</option>
+                          <option value="west">West Facing (Late Afternoon Sun)</option>
+                          <option value="north">North Facing (Shaded Cool Layer)</option>
+                          <option value="flat">Flat Horizontal (Neutral Aspect)</option>
+                        </select>
+                      </div>
+
+                      {/* MICRO-HYDROGEOLOGY & SOIL DEPTH */}
+                      <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-950/60 border border-slate-800 p-4 rounded-2xl">
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="font-semibold text-slate-300">Soil Root Zone Depth</span>
+                            <span className="font-bold font-mono text-emerald-400">{inputs.soilDepthCm || 90} cm</span>
+                          </div>
+                          <input
+                            type="range"
+                            min="15"
+                            max="200"
+                            step="5"
+                            value={inputs.soilDepthCm || 90}
+                            onChange={(e) => handleInputChange('soilDepthCm', parseInt(e.target.value))}
+                            className="w-full accent-emerald-500 cursor-pointer"
+                          />
+                          <div className="flex justify-between text-[10px] text-slate-500">
+                            <span>Shallow (&lt;30cm)</span>
+                            <span>Medium (90cm)</span>
+                            <span>Deep (&gt;150cm)</span>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="font-semibold text-slate-300">Groundwater Table Depth</span>
+                            <span className="font-bold font-mono text-cyan-400">{inputs.waterTableDepthMeters || 18} meters</span>
+                          </div>
+                          <input
+                            type="range"
+                            min="2"
+                            max="150"
+                            step="2"
+                            value={inputs.waterTableDepthMeters || 18}
+                            onChange={(e) => handleInputChange('waterTableDepthMeters', parseInt(e.target.value))}
+                            className="w-full accent-cyan-500 cursor-pointer"
+                          />
+                          <div className="flex justify-between text-[10px] text-slate-500">
+                            <span>High (&lt;5m)</span>
+                            <span>Moderate (20m)</span>
+                            <span>Deep Bore (&gt;100m)</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Topography & Slope */}
                       <div className="sm:col-span-2 space-y-3">
                         <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                          Land Topography & Elevation Slope
+                          Land Topography & Elevation Slope ({inputs.slopeDegree || 2.5}°)
                         </label>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                           {TOPOGRAPHY_OPTIONS.map((topo) => (

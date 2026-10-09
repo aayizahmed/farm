@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { AnalysisResult, CropResult } from '../types';
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from 'recharts';
-import { ArrowLeft, ChevronRight, AlertTriangle, CheckCircle, Info, Box } from 'lucide-react';
+import { ArrowLeft, ChevronRight, AlertTriangle, CheckCircle, Info, Box, Globe, Compass, DollarSign, Layers, ShieldCheck } from 'lucide-react';
 import Crop3DViewer from './Crop3DViewer';
 
 interface ResultsDashboardProps {
@@ -428,6 +428,7 @@ function RotationView({ result }: { result: AnalysisResult }) {
 
 const TABS = [
   { id: 'overview', label: 'Overview' },
+  { id: 'research', label: 'Research Dossier', icon: 'file' },
   { id: 'crops', label: 'Crop Ranking' },
   { id: 'simulator', label: '3D Simulator', icon: true },
   { id: 'soil', label: 'Soil Intelligence' },
@@ -498,6 +499,225 @@ export default function ResultsDashboard({ result, onReset }: ResultsDashboardPr
             {result.inputs.farmArea} acres · {result.inputs.soilType} soil · {result.inputs.season} season
           </p>
         </motion.div>
+
+        
+        {/* RESEARCH DOSSIER TAB */}
+        {activeTab === 'research' && result.researchDossier && (
+          <motion.div
+            key="research"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-8"
+          >
+            {/* Dossier Header Card */}
+            <div className="rounded-3xl p-8 text-white space-y-4 shadow-2xl relative overflow-hidden"
+                 style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #064e3b 100%)' }}>
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-700/80 pb-6">
+                <div>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold uppercase tracking-wider mb-2">
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    Executive Agro-Economic Dossier
+                  </div>
+                  <h3 className="text-2xl md:text-3xl font-extrabold text-white">
+                    Precision Micro-Spatial Research Report
+                  </h3>
+                  <p className="text-sm text-slate-300 mt-1">
+                    Location: <strong className="text-white">{result.inputs.location}</strong> · GPS: <strong className="text-emerald-400 font-mono">{result.researchDossier.spatialAnalysis.gpsCoordinatesFormatted}</strong>
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-700/80 text-center shrink-0">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Site Suitability Index</span>
+                  <div className="text-3xl font-black text-emerald-400">{result.farmSuitabilityScore}%</div>
+                  <span className="text-[10px] text-slate-400">Commercial Grade</span>
+                </div>
+              </div>
+
+              <p className="text-sm text-slate-200 leading-relaxed bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
+                {result.researchDossier.executiveSummaryText}
+              </p>
+            </div>
+
+            {/* SECTION 1: MULTI-UNIT LAND SIZE BREAKDOWN */}
+            <div className="rounded-3xl bg-white border border-[#e5e3de] p-6 space-y-4 shadow-sm">
+              <div className="flex items-center justify-between border-b border-[#f0ede8] pb-3">
+                <h4 className="text-base font-bold text-[#1a2e1a] flex items-center gap-2">
+                  <Layers className="w-5 h-5 text-emerald-600" />
+                  Multi-Unit Land Measurement Conversion Matrix
+                </h4>
+                <span className="text-xs font-semibold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700">
+                  Canonical: {result.researchDossier.landUnitsMatrix.acres} Acres
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                <div className="p-4 rounded-2xl bg-[#f8f9fa] border border-[#e9ecef] text-center space-y-1">
+                  <span className="text-[10px] font-bold text-[#6c757d] uppercase tracking-wider">Acres</span>
+                  <div className="text-xl font-extrabold text-[#212529]">{result.researchDossier.landUnitsMatrix.acres} ac</div>
+                  <span className="text-[10px] text-[#adb5bd]">Standard</span>
+                </div>
+                <div className="p-4 rounded-2xl bg-[#f8f9fa] border border-[#e9ecef] text-center space-y-1">
+                  <span className="text-[10px] font-bold text-[#6c757d] uppercase tracking-wider">Hectares</span>
+                  <div className="text-xl font-extrabold text-[#212529]">{result.researchDossier.landUnitsMatrix.hectares} ha</div>
+                  <span className="text-[10px] text-[#adb5bd]">Metric</span>
+                </div>
+                <div className="p-4 rounded-2xl bg-[#f8f9fa] border border-[#e9ecef] text-center space-y-1">
+                  <span className="text-[10px] font-bold text-[#6c757d] uppercase tracking-wider">Square Meters</span>
+                  <div className="text-lg font-extrabold text-[#212529]">{result.researchDossier.landUnitsMatrix.sqMeters.toLocaleString()} m²</div>
+                  <span className="text-[10px] text-[#adb5bd]">Area</span>
+                </div>
+                <div className="p-4 rounded-2xl bg-[#f8f9fa] border border-[#e9ecef] text-center space-y-1">
+                  <span className="text-[10px] font-bold text-[#6c757d] uppercase tracking-wider">Square Feet</span>
+                  <div className="text-lg font-extrabold text-[#212529]">{result.researchDossier.landUnitsMatrix.sqFeet.toLocaleString()} ft²</div>
+                  <span className="text-[10px] text-[#adb5bd]">Imperial</span>
+                </div>
+                <div className="p-4 rounded-2xl bg-[#f8f9fa] border border-[#e9ecef] text-center space-y-1">
+                  <span className="text-[10px] font-bold text-[#6c757d] uppercase tracking-wider">Standard Bigha</span>
+                  <div className="text-xl font-extrabold text-emerald-700">{result.researchDossier.landUnitsMatrix.bighaStandard}</div>
+                  <span className="text-[10px] text-[#adb5bd]">North India</span>
+                </div>
+                <div className="p-4 rounded-2xl bg-[#f8f9fa] border border-[#e9ecef] text-center space-y-1">
+                  <span className="text-[10px] font-bold text-[#6c757d] uppercase tracking-wider">Guntha</span>
+                  <div className="text-xl font-extrabold text-emerald-700">{result.researchDossier.landUnitsMatrix.guntha}</div>
+                  <span className="text-[10px] text-[#adb5bd]">MH / KA / GJ</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2">
+                <div className="p-3 rounded-xl bg-[#f8f9fa] text-center">
+                  <span className="text-[10px] text-[#6c757d]">Pucca Bigha</span>
+                  <div className="text-sm font-bold text-[#212529]">{result.researchDossier.landUnitsMatrix.bighaPucca}</div>
+                </div>
+                <div className="p-3 rounded-xl bg-[#f8f9fa] text-center">
+                  <span className="text-[10px] text-[#6c757d]">Kucha Bigha</span>
+                  <div className="text-sm font-bold text-[#212529]">{result.researchDossier.landUnitsMatrix.bighaKucha}</div>
+                </div>
+                <div className="p-3 rounded-xl bg-[#f8f9fa] text-center">
+                  <span className="text-[10px] text-[#6c757d]">Kanal</span>
+                  <div className="text-sm font-bold text-[#212529]">{result.researchDossier.landUnitsMatrix.kanal}</div>
+                </div>
+                <div className="p-3 rounded-xl bg-[#f8f9fa] text-center">
+                  <span className="text-[10px] text-[#6c757d]">Marla</span>
+                  <div className="text-sm font-bold text-[#212529]">{result.researchDossier.landUnitsMatrix.marla}</div>
+                </div>
+                <div className="p-3 rounded-xl bg-[#f8f9fa] text-center">
+                  <span className="text-[10px] text-[#6c757d]">Cents</span>
+                  <div className="text-sm font-bold text-[#212529]">{result.researchDossier.landUnitsMatrix.cents}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* SECTION 2: MICRO-LOCATION & SPATIAL HYDRO-GEOLOGY */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="rounded-3xl bg-white border border-[#e5e3de] p-6 space-y-4 shadow-sm">
+                <h4 className="text-base font-bold text-[#1a2e1a] flex items-center gap-2 border-b border-[#f0ede8] pb-3">
+                  <Globe className="w-5 h-5 text-cyan-600" />
+                  Spatial Hydro-Geology & Solar Insolation
+                </h4>
+
+                <div className="space-y-3">
+                  <div className="p-4 rounded-2xl bg-cyan-50/50 border border-cyan-100 flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-bold text-cyan-900 block">Daily Solar Radiation</span>
+                      <span className="text-[11px] text-cyan-700">Solar insolation potential</span>
+                    </div>
+                    <div className="text-xl font-black text-cyan-800">
+                      {result.researchDossier.spatialAnalysis.solarInsolationKwhPerM2} <span className="text-xs font-normal">kWh/m²/day</span>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-emerald-50/50 border border-emerald-100 flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-bold text-emerald-900 block">Root Zone Capacitance</span>
+                      <span className="text-[11px] text-emerald-700">Water retention capacity based on depth</span>
+                    </div>
+                    <div className="text-xl font-black text-emerald-800">
+                      {result.researchDossier.spatialAnalysis.rootZoneCapacitanceMm} <span className="text-xs font-normal">mm H₂O</span>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+                    <span className="text-xs font-bold text-slate-800 block">Slope & Runoff Hazard</span>
+                    <p className="text-xs text-slate-600">{result.researchDossier.spatialAnalysis.slopeRunoffIndex}</p>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+                    <span className="text-xs font-bold text-slate-800 block">Sun Aspect Thermal Gain</span>
+                    <p className="text-xs text-slate-600">{result.researchDossier.spatialAnalysis.aspectSunExposureImpact}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 3: FINANCIAL ROI & ECONOMIC RESEARCH */}
+              <div className="rounded-3xl bg-white border border-[#e5e3de] p-6 space-y-4 shadow-sm">
+                <h4 className="text-base font-bold text-[#1a2e1a] flex items-center gap-2 border-b border-[#f0ede8] pb-3">
+                  <DollarSign className="w-5 h-5 text-emerald-600" />
+                  Financial ROI & Commercial Economics
+                </h4>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-4 rounded-2xl bg-slate-900 text-white space-y-1">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">CapEx Total</span>
+                    <div className="text-2xl font-black text-emerald-400">
+                      ${result.researchDossier.financialFeasibility.estimatedCapExTotal.toLocaleString()}
+                    </div>
+                    <span className="text-[10px] text-slate-400">Infrastructure & Drip</span>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-slate-900 text-white space-y-1">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Net Profit / Season</span>
+                    <div className="text-2xl font-black text-cyan-400">
+                      ${result.researchDossier.financialFeasibility.expectedNetProfit.toLocaleString()}
+                    </div>
+                    <span className="text-[10px] text-slate-400">Net Revenue</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3 pt-2">
+                  <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-100 text-center">
+                    <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider block">ROI %</span>
+                    <div className="text-lg font-black text-emerald-700">{result.researchDossier.financialFeasibility.roiPercent}%</div>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-cyan-50 border border-cyan-100 text-center">
+                    <span className="text-[10px] font-bold text-cyan-800 uppercase tracking-wider block">Payback</span>
+                    <div className="text-lg font-black text-cyan-700">{result.researchDossier.financialFeasibility.paybackPeriodYears} Yrs</div>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-amber-50 border border-amber-100 text-center">
+                    <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider block">CBR Ratio</span>
+                    <div className="text-lg font-black text-amber-700">{result.researchDossier.financialFeasibility.costBenefitRatio}</div>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#f8f9fa] border border-[#e9ecef] space-y-2">
+                  <span className="text-xs font-bold text-[#212529] block">Expected Yield Production</span>
+                  <div className="flex items-center justify-between text-xs text-[#495057]">
+                    <span>Rate per Acre: <strong>{result.researchDossier.agronomicDeepDive.estimatedYieldPerAcre}</strong></span>
+                    <span>Total Volume: <strong className="text-emerald-700">{result.researchDossier.agronomicDeepDive.totalExpectedYield}</strong></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* SECTION 4: STRATEGIC ACTION PLAN */}
+            <div className="rounded-3xl bg-white border border-[#e5e3de] p-6 space-y-4 shadow-sm">
+              <h4 className="text-base font-bold text-[#1a2e1a] flex items-center gap-2 border-b border-[#f0ede8] pb-3">
+                <Compass className="w-5 h-5 text-emerald-600" />
+                Strategic Execution Milestones
+              </h4>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {result.researchDossier.keyActionPlan.map((action, idx) => (
+                  <div key={idx} className="p-4 rounded-2xl bg-[#f8f9fa] border border-[#e9ecef] flex items-start gap-3">
+                    <div className="w-7 h-7 rounded-xl bg-emerald-600 text-white font-black text-xs flex items-center justify-center shrink-0">
+                      {idx + 1}
+                    </div>
+                    <p className="text-xs text-[#343a40] leading-snug font-medium pt-0.5">{action}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* OVERVIEW TAB */}
         {activeTab === 'overview' && (
