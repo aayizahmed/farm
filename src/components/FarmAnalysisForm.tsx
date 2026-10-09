@@ -213,6 +213,9 @@ const WATER_SOURCES: { id: WaterSource; label: string }[] = [
 ﻿export const FarmAnalysisForm: React.FC<FarmAnalysisFormProps> = ({ onAnalyze, onSubmit, initialInputs }) => {
   const [activeStep, setActiveStep] = useState<number>(0);
 
+  
+
+
   const [inputs, setInputs] = useState<FarmInputs>({
     latitude: initialInputs?.latitude ?? 36.7783,
     longitude: initialInputs?.longitude ?? -119.4179,
@@ -244,6 +247,14 @@ const WATER_SOURCES: { id: WaterSource; label: string }[] = [
     waterSource: initialInputs?.waterSource || 'borewell',
     cropCategory: initialInputs?.cropCategory || 'Orchard'
   });
+
+  // Validation checks: ensure analysis only runs after ALL details are filled by user
+  const isStep1Valid = Boolean(inputs.location && (inputs.farmArea > 0) && inputs.cropCategory);
+  const isStep2Valid = Boolean(inputs.soilType && inputs.season && inputs.ph >= 3.0 && inputs.ph <= 10.5 && inputs.nitrogen > 0 && inputs.phosphorus > 0 && inputs.potassium > 0);
+  const isStep3Valid = Boolean(inputs.waterAvailability && inputs.waterSource && inputs.topography && inputs.farmingType);
+  const isFormFullyComplete = isStep1Valid && isStep2Valid && isStep3Valid;
+
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const inputForecast: InputForecast = useMemo(() => {
     return predictFullFarmInputs(inputs);
@@ -374,6 +385,23 @@ const WATER_SOURCES: { id: WaterSource; label: string }[] = [
 
       {/* Main Form Body */}
       <form onSubmit={handleSubmit} className="space-y-8">
+
+        {/* VALIDATION ERROR ALERT BANNER */}
+        {validationError && (
+          <div className="p-4 rounded-2xl bg-rose-950/80 border border-rose-500/50 text-rose-200 flex items-center justify-between text-xs font-semibold shadow-lg">
+            <div className="flex items-center gap-2">
+              <ShieldAlert className="w-5 h-5 text-rose-400 shrink-0" />
+              <span>{validationError}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setValidationError(null)}
+              className="px-3 py-1 rounded-lg bg-rose-900/60 hover:bg-rose-800 text-rose-100 text-[10px] font-bold"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
         <AnimatePresence mode="wait">
           {/* STEP 0: 3D EARTH GLOBE SELECTOR */}
           {activeStep === 0 && (
@@ -1206,7 +1234,7 @@ const WATER_SOURCES: { id: WaterSource; label: string }[] = [
                     className="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-extrabold shadow-xl shadow-emerald-500/25 transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-3 text-base cursor-pointer"
                   >
                     <Sparkles className="w-5 h-5 fill-current" />
-                    <span>Generate Full Agro-Economic Report</span>
+                    <span>Generate Full Agro-Economic Report</span>{isFormFullyComplete && <CheckCircle2 className="w-4 h-4 text-emerald-300" />}
                   </button>
                 </div>
               </motion.div>
