@@ -1,457 +1,1051 @@
-import { useState } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, ChevronLeft, Play } from 'lucide-react';
-import type { FarmInputs, SoilType, Season, WaterAvailability } from '../types';
-import { DEMO_INPUTS } from '../data/crops';
+import {
+  Sprout, Sun, CloudRain, Droplets, Layers, Activity,
+  CheckCircle2, ArrowRight, ArrowLeft, Zap,
+  ShieldAlert, Gauge, MapPin, Sparkles, Sliders,
+  Info, BarChart3, AlertTriangle
+} from 'lucide-react';
+import type {
+  FarmInputs, SoilType, Season, WaterAvailability, Topography,
+  FarmingType, WaterSource, InputForecast
+} from '../types';
+import { predictFullFarmInputs } from '../engine/weatherPredictor';
 
-interface FarmAnalysisFormProps {
-  onSubmit: (inputs: FarmInputs) => void;
+export interface FarmAnalysisFormProps {
+  onAnalyze?: (inputs: FarmInputs) => void;
+  onSubmit?: (inputs: FarmInputs) => void;
+  initialInputs?: Partial<FarmInputs>;
 }
 
-const SOIL_TYPES: { value: SoilType; label: string; desc: string }[] = [
-  { value: 'loamy', label: 'Loamy', desc: 'Balanced, fertile' },
-  { value: 'sandy', label: 'Sandy', desc: 'Light, fast-draining' },
-  { value: 'clay', label: 'Clay', desc: 'Heavy, water-retaining' },
-  { value: 'silt', label: 'Silt', desc: 'Smooth, moisture-holding' },
-  { value: 'peat', label: 'Peat', desc: 'Organic-rich, acidic' },
-  { value: 'chalky', label: 'Chalky', desc: 'Alkaline, stony' },
-];
-
-const SEASONS: { value: Season; label: string; months: string }[] = [
-  { value: 'kharif', label: 'Kharif', months: 'Jun – Nov' },
-  { value: 'rabi', label: 'Rabi', months: 'Nov – Apr' },
-  { value: 'zaid', label: 'Zaid', months: 'Apr – Jun' },
-  { value: 'year-round', label: 'Year-Round', months: 'All seasons' },
-];
-
-const WATER_OPTIONS: { value: WaterAvailability; label: string; desc: string }[] = [
-  { value: 'low', label: 'Low', desc: 'Minimal / rainfed' },
-  { value: 'moderate', label: 'Moderate', desc: 'Seasonal irrigation' },
-  { value: 'high', label: 'High', desc: 'Abundant supply' },
-  { value: 'irrigated', label: 'Irrigated', desc: 'Controlled irrigation' },
-];
-
-const DEFAULT_INPUTS: FarmInputs = {
-  location: '',
-  farmArea: 2,
-  soilType: 'loamy',
-  season: 'kharif',
-  ph: 6.5,
-  nitrogen: 60,
-  phosphorus: 40,
-  potassium: 50,
-  moisture: 40,
-  temperature: 25,
-  rainfall: 1000,
-  waterAvailability: 'moderate',
-};
-
-interface SliderFieldProps {
-  label: string;
-  value: number;
-  min: number;
-  max: number;
-  step: number;
-  unit: string;
-  hint?: string;
-  onChange: (v: number) => void;
-  color?: string;
+interface CommercialPreset {
+  id: string;
+  name: string;
+  subtitle: string;
+  tag: string;
+  inputs: FarmInputs;
 }
 
-function SliderField({ label, value, min, max, step, unit, hint, onChange, color = '#4a7c59' }: SliderFieldProps) {
-  const pct = ((value - min) / (max - min)) * 100;
-
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <label className="text-sm font-semibold text-[#1c1c1e]">{label}</label>
-        <div className="flex items-center gap-1">
-          <input
-            type="number"
-            value={value}
-            min={min}
-            max={max}
-            step={step}
-            onChange={(e) => onChange(parseFloat(e.target.value) || min)}
-            className="w-16 text-center text-sm font-bold border border-[#e5e3de] rounded-lg py-1 px-2 focus:outline-none focus:border-[#4a7c59] focus:ring-2 focus:ring-[#4a7c5920] bg-white"
-          />
-          <span className="text-xs text-[#9ca3af] font-medium">{unit}</span>
-        </div>
-      </div>
-      <div className="relative h-5 flex items-center">
-        <div className="absolute w-full h-1 rounded-full bg-[#e5e3de]" />
-        <div
-          className="absolute h-1 rounded-full transition-all duration-150"
-          style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${color}80, ${color})` }}
-        />
-        <input
-          type="range"
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          onChange={(e) => onChange(parseFloat(e.target.value))}
-          className="slider-custom relative z-10 bg-transparent"
-          style={{ background: 'transparent' }}
-        />
-      </div>
-      {hint && <p className="text-xs text-[#9ca3af]">{hint}</p>}
-    </div>
-  );
-}
-
-const STEPS = [
-  { id: 1, label: 'Farm Profile', desc: 'Location & soil basics' },
-  { id: 2, label: 'Soil Data', desc: 'Nutrient analysis' },
-  { id: 3, label: 'Environment', desc: 'Climate & water' },
+const COMMERCIAL_PRESETS: CommercialPreset[] = [
+  {
+    id: 'ca_almond',
+    name: 'Central Valley Commercial Almond Orchard',
+    subtitle: 'High-density micro-drip almond plantation with solar pumping',
+    tag: 'Enterprise Ag',
+    inputs: {
+      location: 'Central Valley, California, USA',
+      farmArea: 150,
+      soilType: 'loamy',
+      season: 'year-round',
+      waterAvailability: 'moderate',
+      ph: 6.8,
+      nitrogen: 160,
+      phosphorus: 55,
+      potassium: 140,
+      moisture: 45,
+      temperature: 24,
+      rainfall: 550,
+      soc: 1.8,
+      ec: 1.2,
+      topography: 'flat',
+      farmingType: 'conventional',
+      waterSource: 'borewell',
+      cropCategory: 'Orchard'
+    }
+  },
+  {
+    id: 'punjab_wheat',
+    name: 'Indo-Gangetic Precision Wheat Farm',
+    subtitle: 'Canal & borewell irrigated high-yield cereal crop estate',
+    tag: 'High Yield',
+    inputs: {
+      location: 'Punjab, India',
+      farmArea: 45,
+      soilType: 'silt',
+      season: 'rabi',
+      waterAvailability: 'high',
+      ph: 7.4,
+      nitrogen: 140,
+      phosphorus: 48,
+      potassium: 50,
+      moisture: 55,
+      temperature: 18,
+      rainfall: 650,
+      soc: 0.9,
+      ec: 0.8,
+      topography: 'flat',
+      farmingType: 'conventional',
+      waterSource: 'canal',
+      cropCategory: 'Grains'
+    }
+  },
+  {
+    id: 'dutch_greenhouse',
+    name: 'Westland Hi-Tech Bell Pepper Greenhouse',
+    subtitle: 'Climate-controlled hydroponic automated facility',
+    tag: 'Greenhouse Tech',
+    inputs: {
+      location: 'Westland, Netherlands',
+      farmArea: 12,
+      soilType: 'peat',
+      season: 'year-round',
+      waterAvailability: 'high',
+      ph: 6.0,
+      nitrogen: 180,
+      phosphorus: 70,
+      potassium: 200,
+      moisture: 75,
+      temperature: 22,
+      rainfall: 850,
+      soc: 3.5,
+      ec: 2.1,
+      topography: 'flat',
+      farmingType: 'hydroponic',
+      waterSource: 'rainwater',
+      cropCategory: 'Vegetables'
+    }
+  },
+  {
+    id: 'kenya_maize',
+    name: 'Rift Valley Semi-Arid Maize Estate',
+    subtitle: 'Climate-resilient rainfed hybrid maize farm',
+    tag: 'Semi-Arid',
+    inputs: {
+      location: 'Nakuru, Rift Valley, Kenya',
+      farmArea: 80,
+      soilType: 'sandy',
+      season: 'kharif',
+      waterAvailability: 'low',
+      ph: 5.8,
+      nitrogen: 90,
+      phosphorus: 35,
+      potassium: 40,
+      moisture: 30,
+      temperature: 27,
+      rainfall: 420,
+      soc: 0.7,
+      ec: 0.4,
+      topography: 'rolling',
+      farmingType: 'conventional',
+      waterSource: 'borewell',
+      cropCategory: 'Grains'
+    }
+  },
+  {
+    id: 'spain_olive',
+    name: 'Andalusia Super-Intensive Olive Grove',
+    subtitle: 'Terraced precision fertigation Mediterranean plantation',
+    tag: 'Export Quality',
+    inputs: {
+      location: 'Andalusia, Spain',
+      farmArea: 60,
+      soilType: 'chalky',
+      season: 'year-round',
+      waterAvailability: 'moderate',
+      ph: 7.9,
+      nitrogen: 110,
+      phosphorus: 40,
+      potassium: 90,
+      moisture: 35,
+      temperature: 25,
+      rainfall: 480,
+      soc: 1.2,
+      ec: 1.5,
+      topography: 'terraced',
+      farmingType: 'conventional',
+      waterSource: 'borewell',
+      cropCategory: 'Orchard'
+    }
+  }
 ];
 
-export default function FarmAnalysisForm({ onSubmit }: FarmAnalysisFormProps) {
-  const [step, setStep] = useState(1);
-  const [inputs, setInputs] = useState<FarmInputs>(DEFAULT_INPUTS);
+const SOIL_TYPES: { id: SoilType; label: string; desc: string; ret: string }[] = [
+  { id: 'loamy', label: 'Rich Loam', desc: 'Balanced sand, silt & clay. High nutrient retention.', ret: 'High (85%)' },
+  { id: 'clay', label: 'Heavy Clay', desc: 'Dense mineral soil with maximum water holding capacity.', ret: 'Very High (95%)' },
+  { id: 'sandy', label: 'Sandy Soil', desc: 'Free-draining porous soil requiring frequent irrigation.', ret: 'Low (40%)' },
+  { id: 'silt', label: 'Silty Soil', desc: 'Smooth fertile deposit ideal for grains & cereals.', ret: 'Medium-High (75%)' },
+  { id: 'peat', label: 'Peat / Organic', desc: 'High organic carbon matter with high acidity retention.', ret: 'High (90%)' },
+  { id: 'chalky', label: 'Chalky / Alkaline', desc: 'Free-draining alkaline soil over chalk or limestone.', ret: 'Medium (60%)' }
+];
 
-  const set = <K extends keyof FarmInputs>(key: K, val: FarmInputs[K]) =>
-    setInputs((prev) => ({ ...prev, [key]: val }));
+const CROP_CATEGORIES = ['Grains', 'Orchard', 'Vegetables', 'Spices', 'Commercial'];
 
-  const handleDemo = () => {
-    setInputs(DEMO_INPUTS);
-    setTimeout(() => onSubmit(DEMO_INPUTS), 300);
+const SEASONS: { id: Season; label: string; months: string }[] = [
+  { id: 'kharif', label: 'Kharif (Monsoon / Summer)', months: 'June - October' },
+  { id: 'rabi', label: 'Rabi (Winter / Dry Season)', months: 'November - April' },
+  { id: 'zaid', label: 'Zaid (Summer Short Season)', months: 'March - June' },
+  { id: 'year-round', label: 'Year-Round / Perennial', months: '365 Days Continuous' }
+];
+
+const WATER_AVAILABILITY: { id: WaterAvailability; label: string; color: string }[] = [
+  { id: 'low', label: 'Scarce (< 400mm/yr)', color: 'text-amber-400 border-amber-500/40 bg-amber-500/10' },
+  { id: 'moderate', label: 'Moderate (400-900mm/yr)', color: 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10' },
+  { id: 'high', label: 'Abundant (> 900mm/yr)', color: 'text-cyan-400 border-cyan-500/40 bg-cyan-500/10' },
+  { id: 'irrigated', label: 'Fully Irrigated Automation', color: 'text-teal-400 border-teal-500/40 bg-teal-500/10' }
+];
+
+const TOPOGRAPHY_OPTIONS: { id: Topography; label: string }[] = [
+  { id: 'flat', label: 'Flat Plains (< 2% slope)' },
+  { id: 'rolling', label: 'Gentle Rolling Hills (2-8%)' },
+  { id: 'sloped', label: 'Sloped Contour (8-15%)' },
+  { id: 'terraced', label: 'Terraced Mountain Steps' }
+];
+
+const FARMING_TYPES: { id: FarmingType; label: string; desc: string }[] = [
+  { id: 'conventional', label: 'Open Field / Conventional', desc: 'Traditional & mechanised outdoor cultivation' },
+  { id: 'organic', label: 'Certified Organic', desc: 'Natural compost & non-chemical pest management' },
+  { id: 'hydroponic', label: 'Hydroponic / Protected', desc: 'Enclosed microclimate recirculating nutrient system' },
+  { id: 'regenerative', label: 'Regenerative Agriculture', desc: 'Minimum tillage & carbon sequestration focus' }
+];
+
+const WATER_SOURCES: { id: WaterSource; label: string }[] = [
+  { id: 'borewell', label: 'Groundwater Borewell' },
+  { id: 'canal', label: 'Irrigation Canal System' },
+  { id: 'rainwater', label: 'Rainwater Harvesting Reservoir' },
+  { id: 'river', label: 'River / Surface Intake' },
+  { id: 'municipal', label: 'Utility / Municipal Water' }
+];
+
+﻿export const FarmAnalysisForm: React.FC<FarmAnalysisFormProps> = ({ onAnalyze, onSubmit, initialInputs }) => {
+  const [activeStep, setActiveStep] = useState<number>(1);
+
+  const [inputs, setInputs] = useState<FarmInputs>({
+    location: initialInputs?.location || 'Central Valley, California, USA',
+    farmArea: initialInputs?.farmArea || 50,
+    soilType: initialInputs?.soilType || 'loamy',
+    season: initialInputs?.season || 'year-round',
+    waterAvailability: initialInputs?.waterAvailability || 'moderate',
+    ph: initialInputs?.ph ?? 6.8,
+    nitrogen: initialInputs?.nitrogen ?? 120,
+    phosphorus: initialInputs?.phosphorus ?? 45,
+    potassium: initialInputs?.potassium ?? 60,
+    moisture: initialInputs?.moisture ?? 40,
+    temperature: initialInputs?.temperature ?? 24,
+    rainfall: initialInputs?.rainfall ?? 650,
+    soc: initialInputs?.soc ?? 1.5,
+    ec: initialInputs?.ec ?? 1.0,
+    topography: initialInputs?.topography || 'flat',
+    farmingType: initialInputs?.farmingType || 'conventional',
+    waterSource: initialInputs?.waterSource || 'borewell',
+    cropCategory: initialInputs?.cropCategory || 'Orchard'
+  });
+
+  const inputForecast: InputForecast = useMemo(() => {
+    return predictFullFarmInputs(inputs);
+  }, [inputs]);
+
+  const handleInputChange = <K extends keyof FarmInputs>(key: K, value: FarmInputs[K]) => {
+    setInputs(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleSubmit = () => onSubmit(inputs);
+  const applyPreset = (preset: CommercialPreset) => {
+    setInputs(preset.inputs);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (onAnalyze) onAnalyze(inputs);
+    if (onSubmit) onSubmit(inputs);
+  };
+
+  const { weather, water, amendments, pestRisks, resources } = inputForecast;
 
   return (
-    <section id="analysis" className="py-24 lg:py-32 bg-white/70 backdrop-blur-xl">
-      <div className="max-w-4xl mx-auto px-6 lg:px-8">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <span className="section-label">Farm Analysis</span>
-          <h2 className="text-4xl lg:text-5xl font-display text-[#1a2e1a] mt-3" style={{ letterSpacing: '-0.025em' }}>
-            Tell us about your farm
-          </h2>
-          <p className="mt-4 text-[#6b7280] text-base max-w-lg mx-auto">
-            Enter your soil and environmental data to receive a personalized crop intelligence report.
-          </p>
+    <div className="w-full max-w-7xl mx-auto px-4 py-8">
+      {/* Top Banner / Title */}
+      <div className="relative mb-8 rounded-3xl overflow-hidden bg-gradient-to-r from-emerald-950/80 via-slate-900 to-cyan-950/80 border border-emerald-500/20 p-8 shadow-2xl backdrop-blur-xl">
+        <div className="absolute top-0 right-0 -mt-12 -mr-12 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-1/3 -mb-12 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
-          {/* Demo button */}
-          <motion.button
-            className="mt-5 inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-200"
-            style={{
-              background: 'linear-gradient(135deg, rgba(163,230,53,0.15), rgba(74,124,89,0.15))',
-              border: '1.5px solid rgba(74,124,89,0.3)',
-              color: '#2d4a2d',
-            }}
-            onClick={handleDemo}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-          >
-            <Play size={14} />
-            Try Demo Farm — Kozhikode
-          </motion.button>
-        </div>
-
-        {/* Step indicator */}
-        <div className="flex items-center gap-0 mb-8">
-          {STEPS.map((s, i) => (
-            <div key={s.id} className="flex items-center flex-1">
-              <button
-                className="flex flex-col items-center gap-1.5 flex-1"
-                onClick={() => s.id < step && setStep(s.id)}
-                disabled={s.id > step}
-              >
-                <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300"
-                  style={{
-                    background: s.id === step ? 'linear-gradient(135deg, #2d4a2d, #4a7c59)' :
-                      s.id < step ? '#4a7c59' : '#e5e3de',
-                    color: s.id <= step ? 'white' : '#9ca3af',
-                  }}
-                >
-                  {s.id < step ? '✓' : s.id}
-                </div>
-                <div className="hidden sm:block text-center">
-                  <div className="text-xs font-semibold text-[#1c1c1e]">{s.label}</div>
-                  <div className="text-[10px] text-[#9ca3af]">{s.desc}</div>
-                </div>
-              </button>
-              {i < STEPS.length - 1 && (
-                <div className="flex-1 h-px mx-2" style={{ background: step > s.id ? '#4a7c59' : '#e5e3de' }} />
-              )}
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          <div className="space-y-3 max-w-3xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
+              <Sparkles className="w-3.5 h-3.5" />
+              Commercial Agri-SaaS Platform • Enterprise Engine
             </div>
-          ))}
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
+              Commercial Farm Profiler & <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">Weather Intelligence</span>
+            </h1>
+            <p className="text-slate-300 text-sm md:text-base leading-relaxed">
+              Configure your commercial agricultural operations with precision agronomics, live 7-day micro-climate weather forecasts, natural rainfall water offset credits, and multi-variable resource budgeting.
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <button
+              type="button"
+              onClick={handleSubmit}
+              className="w-full sm:w-auto px-6 py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold shadow-lg shadow-emerald-500/25 transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-3 text-sm cursor-pointer"
+            >
+              <Zap className="w-5 h-5 fill-current" />
+              <span>Run Full Agro Analysis</span>
+            </button>
+          </div>
         </div>
 
-        {/* Form card */}
-        <motion.div
-          className="rounded-2xl overflow-hidden"
-          style={{ background: 'white', border: '1px solid var(--color-border)', boxShadow: '0 4px 32px rgba(0,0,0,0.06)' }}
-        >
+        {/* Preset Selector */}
+        <div className="mt-8 pt-6 border-t border-slate-800/80">
+          <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+            <Sliders className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Load Commercial Enterprise Presets:</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            {COMMERCIAL_PRESETS.map((preset) => (
+              <button
+                key={preset.id}
+                type="button"
+                onClick={() => applyPreset(preset)}
+                className={`p-3 rounded-xl text-left border transition-all cursor-pointer ${
+                  inputs.location === preset.inputs.location
+                    ? 'bg-emerald-500/15 border-emerald-500/60 shadow-md shadow-emerald-500/10'
+                    : 'bg-slate-900/60 border-slate-800 hover:border-slate-700 hover:bg-slate-800/50'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300">
+                    {preset.tag}
+                  </span>
+                  {inputs.location === preset.inputs.location && (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  )}
+                </div>
+                <div className="text-xs font-bold text-white truncate">{preset.name}</div>
+                <div className="text-[11px] text-slate-400 truncate mt-0.5">{preset.inputs.cropCategory} • {preset.inputs.farmArea} Acres</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Navigation Tabs */}
+      <div className="flex flex-wrap items-center gap-2 mb-8 p-1.5 rounded-2xl bg-slate-900/80 border border-slate-800 backdrop-blur-md">
+        {[
+          { num: 1, title: 'Land & Location', icon: MapPin },
+          { num: 2, title: 'Soil & Crop Agronomy', icon: Sprout },
+          { num: 3, title: 'Irrigation & Utilities', icon: Droplets },
+          { num: 4, title: '7-Day Weather & Resource Forecast', icon: Sun, highlight: true }
+        ].map((step) => {
+          const Icon = step.icon;
+          const isActive = activeStep === step.num;
+          return (
+            <button
+              key={step.num}
+              type="button"
+              onClick={() => setActiveStep(step.num)}
+              className={`flex-1 min-w-[180px] py-3 px-4 rounded-xl font-medium text-xs md:text-sm flex items-center justify-center gap-2.5 transition-all cursor-pointer ${
+                isActive
+                  ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-slate-950 font-bold shadow-md shadow-emerald-500/20'
+                  : step.highlight
+                  ? 'bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/20'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              }`}
+            >
+              <Icon className={`w-4 h-4 ${isActive ? 'text-slate-950' : 'text-emerald-400'}`} />
+              <span>Step {step.num}: {step.title}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Main Form Body */}
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Step Content Area */}
+        <div className="lg:col-span-8 space-y-6">
           <AnimatePresence mode="wait">
-            {step === 1 && (
+            {/* STEP 1: LAND & LOCATION */}
+            {activeStep === 1 && (
               <motion.div
                 key="step1"
-                className="p-8 lg:p-10"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 md:p-8 space-y-6 backdrop-blur-xl shadow-xl"
               >
-                <h3 className="text-xl font-bold text-[#1a2e1a] mb-6 pb-4 border-b border-[#f0ede8]">
-                  Farm Profile
-                </h3>
+                <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
+                  <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+                    <MapPin className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">Geographical & Land Parameters</h2>
+                    <p className="text-xs text-slate-400">Specify farm location, surface topography, scale, and operational model.</p>
+                  </div>
+                </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {/* Location */}
-                  <div className="sm:col-span-2">
-                    <label className="text-sm font-semibold text-[#1c1c1e] block mb-2">Farm Location</label>
+                  {/* Location Input */}
+                  <div className="sm:col-span-2 space-y-2">
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                      Farm Location / Microclimate Region
+                    </label>
+                    <div className="relative">
+                      <MapPin className="w-5 h-5 absolute left-3.5 top-3.5 text-slate-500" />
+                      <input
+                        type="text"
+                        value={inputs.location}
+                        onChange={(e) => handleInputChange('location', e.target.value)}
+                        placeholder="e.g. Central Valley, California or Punjab, India"
+                        className="w-full pl-11 pr-4 py-3 bg-slate-950/80 border border-slate-700/80 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-sm font-medium"
+                      />
+                    </div>
+                    <span className="text-[11px] text-slate-400">Generates localized solar irradiance and weather patterns.</span>
+                  </div>
+
+                  {/* Acreage Input */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                        Total Farm Area (Acres)
+                      </label>
+                      <span className="text-xs font-bold text-emerald-400">
+                        {(inputs.farmArea * 0.404686).toFixed(1)} Hectares
+                      </span>
+                    </div>
                     <input
-                      type="text"
-                      className="input-field"
-                      placeholder="e.g. Kozhikode, Kerala"
-                      value={inputs.location}
-                      onChange={(e) => set('location', e.target.value)}
+                      type="number"
+                      min="1"
+                      max="10000"
+                      value={inputs.farmArea}
+                      onChange={(e) => handleInputChange('farmArea', Math.max(1, Number(e.target.value)))}
+                      className="w-full px-4 py-3 bg-slate-950/80 border border-slate-700/80 rounded-xl text-white text-sm font-semibold focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
                     />
                   </div>
 
-                  {/* Farm area */}
-                  <div>
-                    <label className="text-sm font-semibold text-[#1c1c1e] block mb-2">Farm Area</label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        className="input-field pr-14"
-                        min={0.1}
-                        step={0.1}
-                        value={inputs.farmArea}
-                        onChange={(e) => set('farmArea', parseFloat(e.target.value) || 0.1)}
-                      />
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-[#9ca3af] font-medium">acres</span>
-                    </div>
+                  {/* Crop Focus */}
+                  <div className="space-y-2">
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                      Target Crop Category Focus
+                    </label>
+                    <select
+                      value={inputs.cropCategory || 'Orchard'}
+                      onChange={(e) => handleInputChange('cropCategory', e.target.value)}
+                      className="w-full px-4 py-3 bg-slate-950/80 border border-slate-700/80 rounded-xl text-white text-sm font-medium focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                    >
+                      {CROP_CATEGORIES.map((cat) => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
                   </div>
 
-                  {/* Growing season */}
-                  <div>
-                    <label className="text-sm font-semibold text-[#1c1c1e] block mb-2">Growing Season</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {SEASONS.map((s) => (
+                  {/* Topography */}
+                  <div className="sm:col-span-2 space-y-3">
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                      Land Topography & Elevation Slope
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {TOPOGRAPHY_OPTIONS.map((topo) => (
                         <button
-                          key={s.value}
-                          onClick={() => set('season', s.value)}
-                          className="rounded-xl p-2.5 text-left transition-all duration-200 border"
-                          style={{
-                            background: inputs.season === s.value ? 'rgba(74,124,89,0.08)' : 'white',
-                            borderColor: inputs.season === s.value ? '#4a7c59' : '#e5e3de',
-                          }}
+                          key={topo.id}
+                          type="button"
+                          onClick={() => handleInputChange('topography', topo.id)}
+                          className={`p-3 rounded-xl border text-center transition-all cursor-pointer ${
+                            inputs.topography === topo.id
+                              ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300 font-bold'
+                              : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700'
+                          }`}
                         >
-                          <div className="text-sm font-semibold text-[#1c1c1e]">{s.label}</div>
-                          <div className="text-xs text-[#9ca3af]">{s.months}</div>
+                          <div className="text-xs">{topo.label}</div>
                         </button>
                       ))}
                     </div>
                   </div>
 
-                  {/* Soil type */}
-                  <div className="sm:col-span-2">
-                    <label className="text-sm font-semibold text-[#1c1c1e] block mb-2">Soil Type</label>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {SOIL_TYPES.map((s) => (
+                  {/* Farming Type */}
+                  <div className="sm:col-span-2 space-y-3">
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                      Operational Farming Model
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {FARMING_TYPES.map((ft) => (
                         <button
-                          key={s.value}
-                          onClick={() => set('soilType', s.value)}
-                          className="rounded-xl p-3 text-left transition-all duration-200 border"
-                          style={{
-                            background: inputs.soilType === s.value ? 'rgba(74,124,89,0.08)' : 'white',
-                            borderColor: inputs.soilType === s.value ? '#4a7c59' : '#e5e3de',
-                          }}
+                          key={ft.id}
+                          type="button"
+                          onClick={() => handleInputChange('farmingType', ft.id)}
+                          className={`p-4 rounded-xl border text-left transition-all cursor-pointer ${
+                            inputs.farmingType === ft.id
+                              ? 'bg-emerald-500/20 border-emerald-500 text-white'
+                              : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700'
+                          }`}
                         >
-                          <div className="text-sm font-semibold text-[#1c1c1e]">{s.label}</div>
-                          <div className="text-xs text-[#9ca3af]">{s.desc}</div>
+                          <div className="text-xs font-bold text-white mb-1">{ft.label}</div>
+                          <div className="text-[11px] text-slate-400">{ft.desc}</div>
                         </button>
                       ))}
                     </div>
                   </div>
                 </div>
+
+                <div className="flex justify-end pt-4 border-t border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setActiveStep(2)}
+                    className="px-6 py-3 rounded-xl bg-emerald-500 text-slate-950 font-bold hover:bg-emerald-400 transition-all flex items-center gap-2 text-sm cursor-pointer"
+                  >
+                    <span>Proceed to Agronomy</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
               </motion.div>
             )}
 
-            {step === 2 && (
+            {/* STEP 2: SOIL & CROP AGRONOMY */}
+            {activeStep === 2 && (
               <motion.div
                 key="step2"
-                className="p-8 lg:p-10"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 md:p-8 space-y-6 backdrop-blur-xl shadow-xl"
               >
-                <h3 className="text-xl font-bold text-[#1a2e1a] mb-6 pb-4 border-b border-[#f0ede8]">
-                  Soil Data
-                </h3>
-
-                <div className="space-y-7">
-                  <SliderField
-                    label="Soil pH"
-                    value={inputs.ph}
-                    min={3.5}
-                    max={9}
-                    step={0.1}
-                    unit=""
-                    hint="Most crops prefer 6.0–7.0. Below 6 is acidic, above 7 is alkaline."
-                    onChange={(v) => set('ph', v)}
-                    color="#4a7c59"
-                  />
-                  <SliderField
-                    label="Nitrogen (N)"
-                    value={inputs.nitrogen}
-                    min={0}
-                    max={200}
-                    step={1}
-                    unit="kg/ha"
-                    hint="Available nitrogen content in soil. Critical for vegetative growth."
-                    onChange={(v) => set('nitrogen', v)}
-                    color="#2d4a2d"
-                  />
-                  <SliderField
-                    label="Phosphorus (P)"
-                    value={inputs.phosphorus}
-                    min={0}
-                    max={150}
-                    step={1}
-                    unit="kg/ha"
-                    hint="Essential for root development and energy transfer."
-                    onChange={(v) => set('phosphorus', v)}
-                    color="#8b7355"
-                  />
-                  <SliderField
-                    label="Potassium (K)"
-                    value={inputs.potassium}
-                    min={0}
-                    max={200}
-                    step={1}
-                    unit="kg/ha"
-                    hint="Supports fruit quality, disease resistance, and water regulation."
-                    onChange={(v) => set('potassium', v)}
-                    color="#6aab7a"
-                  />
-                  <SliderField
-                    label="Soil Moisture"
-                    value={inputs.moisture}
-                    min={0}
-                    max={100}
-                    step={1}
-                    unit="%"
-                    hint="Current volumetric soil moisture content."
-                    onChange={(v) => set('moisture', v)}
-                    color="#4a7c59"
-                  />
-                </div>
-              </motion.div>
-            )}
-
-            {step === 3 && (
-              <motion.div
-                key="step3"
-                className="p-8 lg:p-10"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                <h3 className="text-xl font-bold text-[#1a2e1a] mb-6 pb-4 border-b border-[#f0ede8]">
-                  Environmental Conditions
-                </h3>
-
-                <div className="space-y-7">
-                  <SliderField
-                    label="Average Temperature"
-                    value={inputs.temperature}
-                    min={5}
-                    max={45}
-                    step={0.5}
-                    unit="°C"
-                    hint="Mean daytime temperature during growing season."
-                    onChange={(v) => set('temperature', v)}
-                    color="#8b7355"
-                  />
-                  <SliderField
-                    label="Annual Rainfall"
-                    value={inputs.rainfall}
-                    min={100}
-                    max={3000}
-                    step={10}
-                    unit="mm"
-                    hint="Total annual precipitation for your region."
-                    onChange={(v) => set('rainfall', v)}
-                    color="#4a7c59"
-                  />
-
-                  {/* Water availability */}
+                <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
+                  <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+                    <Sprout className="w-6 h-6" />
+                  </div>
                   <div>
-                    <label className="text-sm font-semibold text-[#1c1c1e] block mb-3">Water Availability</label>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      {WATER_OPTIONS.map((w) => (
+                    <h2 className="text-xl font-bold text-white">Soil Chemistry & Agronomic Specifications</h2>
+                    <p className="text-xs text-slate-400">Configure NPK nutrients, soil organic carbon (SOC), salinity EC, and pH balance.</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {/* Season */}
+                  <div className="sm:col-span-2 space-y-2">
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                      Cultivation Cycle / Season
+                    </label>
+                    <select
+                      value={inputs.season}
+                      onChange={(e) => handleInputChange('season', e.target.value as Season)}
+                      className="w-full px-4 py-3 bg-slate-950/80 border border-slate-700/80 rounded-xl text-white text-sm font-medium focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                    >
+                      {SEASONS.map((s) => (
+                        <option key={s.id} value={s.id}>{s.label} ({s.months})</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Soil Type Selection */}
+                  <div className="sm:col-span-2 space-y-3">
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                      Soil Physical Texture & Drainage Class
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      {SOIL_TYPES.map((st) => (
                         <button
-                          key={w.value}
-                          onClick={() => set('waterAvailability', w.value)}
-                          className="rounded-xl p-3 text-center transition-all duration-200 border"
-                          style={{
-                            background: inputs.waterAvailability === w.value ? 'rgba(74,124,89,0.08)' : 'white',
-                            borderColor: inputs.waterAvailability === w.value ? '#4a7c59' : '#e5e3de',
-                          }}
+                          key={st.id}
+                          type="button"
+                          onClick={() => handleInputChange('soilType', st.id)}
+                          className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+                            inputs.soilType === st.id
+                              ? 'bg-emerald-500/20 border-emerald-500 text-white shadow-md shadow-emerald-500/10'
+                              : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700'
+                          }`}
                         >
-                          <div className="text-sm font-semibold text-[#1c1c1e]">{w.label}</div>
-                          <div className="text-xs text-[#9ca3af] mt-0.5">{w.desc}</div>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-bold text-white">{st.label}</span>
+                            <span className="text-[10px] text-emerald-400 font-mono">{st.ret}</span>
+                          </div>
+                          <p className="text-[11px] text-slate-400 leading-snug">{st.desc}</p>
                         </button>
                       ))}
                     </div>
                   </div>
+
+                  {/* Soil Organic Carbon (SOC) Slider */}
+                  <div className="space-y-3 bg-slate-950/60 border border-slate-800 p-4 rounded-2xl">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                        Soil Organic Carbon (SOC)
+                      </label>
+                      <span className="text-xs font-bold font-mono text-emerald-400">{(inputs.soc || 1.5).toFixed(1)} %</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.2"
+                      max="4.5"
+                      step="0.1"
+                      value={inputs.soc || 1.5}
+                      onChange={(e) => handleInputChange('soc', parseFloat(e.target.value))}
+                      className="w-full accent-emerald-500 cursor-pointer"
+                    />
+                    <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+                      <span>Low (&lt; 0.5%)</span>
+                      <span>Optimal (1.5 - 2.5%)</span>
+                      <span>High (&gt; 3.0%)</span>
+                    </div>
+                  </div>
+
+                  {/* Electrical Conductivity (EC) Salinity */}
+                  <div className="space-y-3 bg-slate-950/60 border border-slate-800 p-4 rounded-2xl">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                        Salinity EC Index
+                      </label>
+                      <span className="text-xs font-bold font-mono text-cyan-400">{(inputs.ec || 1.0).toFixed(1)} dS/m</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.1"
+                      max="5.0"
+                      step="0.1"
+                      value={inputs.ec || 1.0}
+                      onChange={(e) => handleInputChange('ec', parseFloat(e.target.value))}
+                      className="w-full accent-cyan-500 cursor-pointer"
+                    />
+                    <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+                      <span>Non-Saline (&lt; 1.0)</span>
+                      <span>Moderate (2.0)</span>
+                      <span>High Salinity (&gt; 3.5)</span>
+                    </div>
+                  </div>
+
+                  {/* Soil pH Level */}
+                  <div className="sm:col-span-2 space-y-3 bg-slate-950/60 border border-slate-800 p-4 rounded-2xl">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                        Soil pH Balance
+                      </label>
+                      <span className="text-xs font-bold font-mono text-teal-300">pH {(inputs.ph || 6.8).toFixed(1)}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="4.5"
+                      max="9.0"
+                      step="0.1"
+                      value={inputs.ph || 6.8}
+                      onChange={(e) => handleInputChange('ph', parseFloat(e.target.value))}
+                      className="w-full accent-teal-400 cursor-pointer"
+                    />
+                    <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+                      <span>Acidic (pH &lt; 6.0)</span>
+                      <span>Optimal Neutral (6.5 - 7.2)</span>
+                      <span>Alkaline (pH &gt; 7.8)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-between pt-4 border-t border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setActiveStep(1)}
+                    className="px-5 py-2.5 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 transition-all flex items-center gap-2 text-sm cursor-pointer"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    <span>Back</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveStep(3)}
+                    className="px-6 py-3 rounded-xl bg-emerald-500 text-slate-950 font-bold hover:bg-emerald-400 transition-all flex items-center gap-2 text-sm cursor-pointer"
+                  >
+                    <span>Proceed to Irrigation</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* STEP 3: IRRIGATION & UTILITIES */}
+            {activeStep === 3 && (
+              <motion.div
+                key="step3"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 md:p-8 space-y-6 backdrop-blur-xl shadow-xl"
+              >
+                <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
+                  <div className="p-3 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
+                    <Droplets className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">Irrigation Systems & Hydraulic Utilities</h2>
+                    <p className="text-xs text-slate-400">Define primary water sources, baseline availability index, and infrastructure.</p>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  {/* Water Availability Index */}
+                  <div className="space-y-3">
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                      Regional Baseline Water Availability
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                      {WATER_AVAILABILITY.map((wa) => (
+                        <button
+                          key={wa.id}
+                          type="button"
+                          onClick={() => handleInputChange('waterAvailability', wa.id)}
+                          className={`p-4 rounded-xl border text-center transition-all cursor-pointer ${
+                            inputs.waterAvailability === wa.id
+                              ? `${wa.color} font-bold shadow-md`
+                              : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700'
+                          }`}
+                        >
+                          <div className="text-xs">{wa.label}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Water Source */}
+                  <div className="space-y-3">
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                      Primary Water Supply Infrastructure
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {WATER_SOURCES.map((ws) => (
+                        <button
+                          key={ws.id}
+                          type="button"
+                          onClick={() => handleInputChange('waterSource', ws.id)}
+                          className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+                            inputs.waterSource === ws.id
+                              ? 'bg-cyan-500/20 border-cyan-500 text-white font-bold'
+                              : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700'
+                          }`}
+                        >
+                          <div className="text-xs">{ws.label}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Dynamic Water Requirements Info Box */}
+                  <div className="p-4 rounded-2xl bg-cyan-950/30 border border-cyan-500/30 flex items-start gap-3 text-cyan-200 text-xs">
+                    <Info className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold mb-1">Evapotranspiration (ET₀) & Weather Compensation</p>
+                      <p className="text-slate-300 text-[11px] leading-relaxed">
+                        In Step 4, our micro-climate weather model will calculate the exact daily evapotranspiration rate for your specified location ({inputs.location}) and automatically credit natural rainfall absorbed into the root zone.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-between pt-4 border-t border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setActiveStep(2)}
+                    className="px-5 py-2.5 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 transition-all flex items-center gap-2 text-sm cursor-pointer"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    <span>Back</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveStep(4)}
+                    className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-bold hover:from-emerald-400 hover:to-cyan-400 transition-all flex items-center gap-2 text-sm cursor-pointer"
+                  >
+                    <span>View Weather & Forecast Quantities</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+﻿            {/* STEP 4: 7-DAY WEATHER & QUANTITY VARYING CALCULATOR */}
+            {activeStep === 4 && (
+              <motion.div
+                key="step4"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 md:p-8 space-y-8 backdrop-blur-xl shadow-xl"
+              >
+                <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
+                      <Sun className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-white">7-Day Weather Radar & Resource Requirements</h2>
+                      <p className="text-xs text-slate-400">Micro-climate irrigation calculations and dynamic agricultural inputs.</p>
+                    </div>
+                  </div>
+                  <div className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
+                    <Activity className="w-3.5 h-3.5 animate-pulse" />
+                    <span>Live Simulation Ready</span>
+                  </div>
+                </div>
+
+                {/* 7-DAY WEATHER RADAR CARDS */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                      <CloudRain className="w-4 h-4 text-cyan-400" />
+                      7-Day Microclimate Weather Outlook ({weather.locationName})
+                    </h3>
+                    <span className="text-[11px] text-slate-400">Current Temp: <strong className="text-white">{weather.currentTemp}°C</strong></span>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+                    {weather.sevenDayForecast.map((day, idx) => (
+                      <div
+                        key={idx}
+                        className={`p-3 rounded-2xl border text-center transition-all ${
+                          day.rainMm > 5
+                            ? 'bg-cyan-950/40 border-cyan-500/50 text-cyan-200'
+                            : 'bg-slate-950/60 border-slate-800 text-slate-300'
+                        }`}
+                      >
+                        <div className="text-[11px] font-bold text-slate-400 mb-1">{day.day}</div>
+                        <div className="text-lg font-extrabold text-white">{day.tempHigh}°C</div>
+                        <div className="text-[10px] text-slate-400 mt-1 flex items-center justify-center gap-1">
+                          <Droplets className="w-3 h-3 text-cyan-400" />
+                          <span>{day.humidity}%</span>
+                        </div>
+                        <div className="mt-2 pt-2 border-t border-slate-800/80 text-[10px] font-semibold text-emerald-400">
+                          {day.rainMm > 0 ? `${day.rainMm} mm Rain` : 'Clear Sky'}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* WATER REQUIRED STATS CARD */}
+                <div className="p-6 rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-950/50 border border-cyan-500/30 space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+                    <div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
+                        <Droplets className="w-4 h-4" />
+                        Irrigation Water Demand Engine
+                      </span>
+                      <h4 className="text-lg font-bold text-white mt-1">Weather-Adjusted Water Requirement</h4>
+                    </div>
+                    <div className="px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-mono">
+                      Rainfall Offset Savings: <strong>{water.efficiencySavingPct}% Offset</strong>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800">
+                      <div className="text-[11px] text-slate-400 uppercase font-semibold">Standard Daily Requirement</div>
+                      <div className="text-xl font-bold text-slate-300 mt-1">
+                        {(water.dailyWaterLiters / 1000).toFixed(1)} <span className="text-xs">m³/day</span>
+                      </div>
+                      <div className="text-[10px] text-slate-500 mt-1 font-mono">
+                        {water.dailyWaterLiters.toLocaleString()} Liters
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-cyan-950/40 border border-cyan-500/40">
+                      <div className="text-[11px] text-cyan-300 uppercase font-semibold flex items-center gap-1">
+                        <CloudRain className="w-3.5 h-3.5 text-cyan-400" />
+                        Natural Rainfall Credit
+                      </div>
+                      <div className="text-xl font-bold text-cyan-300 mt-1">
+                        -{(water.rainCompensationLiters / 1000).toFixed(1)} <span className="text-xs">m³/day</span>
+                      </div>
+                      <div className="text-[10px] text-cyan-400/80 mt-1 font-mono">
+                        Saved by Absorbed Rainfall
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-emerald-950/40 border border-emerald-500/50">
+                      <div className="text-[11px] text-emerald-300 uppercase font-semibold">Net Daily Water to Supply</div>
+                      <div className="text-2xl font-extrabold text-emerald-400 mt-1">
+                        {(water.weatherAdjustedDailyLiters / 1000).toFixed(1)} <span className="text-xs">m³/day</span>
+                      </div>
+                      <div className="text-[10px] text-emerald-300/80 mt-1 font-mono">
+                        Weekly Total: {(water.weeklyWaterLiters / 1000).toLocaleString()} m³
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* VARYING OTHER AGRICULTURAL QUANTITIES TABLE */}
+                <div className="space-y-4">
+                  <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                    <BarChart3 className="w-4 h-4 text-emerald-400" />
+                    Varying Agricultural Quantities & Resource Predictions
+                  </h3>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {/* Amendments / Fertilizers */}
+                    {amendments.slice(0, 3).map((item, idx) => (
+                      <div key={idx} className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-2">
+                        <div className="flex items-center justify-between text-slate-400 text-xs">
+                          <span className="font-semibold flex items-center gap-1.5">
+                            <Sprout className="w-4 h-4 text-emerald-400" />
+                            {item.name}
+                          </span>
+                        </div>
+                        <div className="text-2xl font-extrabold text-white">
+                          {item.amountKg.toLocaleString()} <span className="text-sm font-normal text-slate-400">kg</span>
+                        </div>
+                        <p className="text-[11px] text-slate-400">{item.purpose} ({item.bags50kg} bags of 50kg).</p>
+                      </div>
+                    ))}
+
+                    {/* Seeds Required */}
+                    <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-2">
+                      <div className="flex items-center justify-between text-slate-400 text-xs">
+                        <span className="font-semibold flex items-center gap-1.5">
+                          <Layers className="w-4 h-4 text-cyan-400" />
+                          Certified Seed Quantum
+                        </span>
+                      </div>
+                      <div className="text-2xl font-extrabold text-cyan-300">
+                        {resources.seedRequirementKg.toLocaleString()} <span className="text-sm font-normal text-slate-400">kg</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400">Required {resources.seedBags} bags for {inputs.farmArea} Acres.</p>
+                    </div>
+
+                    {/* Solar Pumping Energy */}
+                    <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-2">
+                      <div className="flex items-center justify-between text-slate-400 text-xs">
+                        <span className="font-semibold flex items-center gap-1.5">
+                          <Zap className="w-4 h-4 text-yellow-400" />
+                          Solar Pumping Power
+                        </span>
+                      </div>
+                      <div className="text-2xl font-extrabold text-yellow-300">
+                        {resources.dailySolarPumpEnergyKwh.toLocaleString()} <span className="text-sm font-normal text-slate-400">kWh/day</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400">Daily solar power needed for irrigation pumps.</p>
+                    </div>
+
+                    {/* Labor Force */}
+                    <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-2">
+                      <div className="flex items-center justify-between text-slate-400 text-xs">
+                        <span className="font-semibold flex items-center gap-1.5">
+                          <Activity className="w-4 h-4 text-teal-400" />
+                          Seasonal Field Labor
+                        </span>
+                      </div>
+                      <div className="text-2xl font-extrabold text-teal-300">
+                        {resources.estimatedLaborDaysPerSeason.toLocaleString()} <span className="text-sm font-normal text-slate-400">Person-Days</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400">Total labor required across growing season.</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* PEST & DISEASE RISK ADVISORIES */}
+                {pestRisks.length > 0 && (
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                      <ShieldAlert className="w-4 h-4 text-amber-400" />
+                      Weather-Induced Pest & Crop Disease Risk Advisories
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {pestRisks.map((pest, idx) => (
+                        <div key={idx} className="p-4 rounded-2xl bg-amber-950/20 border border-amber-500/30 flex items-start gap-3">
+                          <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                          <div>
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-xs font-bold text-amber-200">{pest.diseaseName}</span>
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300">
+                                {pest.riskLevel.toUpperCase()} RISK
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-slate-300 mt-1">{pest.triggerReason}</p>
+                            <p className="text-[10px] text-emerald-400 mt-2 font-semibold">Preventive Action: {pest.preventiveMeasure}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* FINAL SUBMIT BUTTON */}
+                <div className="pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setActiveStep(3)}
+                    className="w-full sm:w-auto px-5 py-3 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    <span>Back to Irrigation</span>
+                  </button>
+
+                  <button
+                    type="submit"
+                    className="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-extrabold shadow-xl shadow-emerald-500/25 transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-3 text-base cursor-pointer"
+                  >
+                    <Sparkles className="w-5 h-5 fill-current" />
+                    <span>Generate Full Agro-Economic Report</span>
+                  </button>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
+        </div>
 
-          {/* Navigation footer */}
-          <div className="px-8 lg:px-10 py-5 border-t border-[#f0ede8] flex items-center justify-between"
-            style={{ background: '#fafaf8' }}>
+        {/* Right Sidebar */}
+        <div className="lg:col-span-4 space-y-6">
+          <div className="sticky top-6 bg-slate-900/90 border border-slate-800 rounded-3xl p-6 space-y-6 backdrop-blur-xl shadow-xl">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                <Gauge className="w-4 h-4 text-emerald-400" />
+                Live Farm Profile
+              </span>
+              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300">
+                Active Parameters
+              </span>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between text-xs border-b border-slate-800/60 pb-2.5">
+                <span className="text-slate-400">Crop Focus</span>
+                <span className="font-bold text-white">{inputs.cropCategory}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs border-b border-slate-800/60 pb-2.5">
+                <span className="text-slate-400">Farm Scale</span>
+                <span className="font-bold text-emerald-400">{inputs.farmArea} Acres ({(inputs.farmArea * 0.404686).toFixed(1)} ha)</span>
+              </div>
+              <div className="flex items-center justify-between text-xs border-b border-slate-800/60 pb-2.5">
+                <span className="text-slate-400">Location</span>
+                <span className="font-bold text-white max-w-[180px] truncate">{inputs.location}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs border-b border-slate-800/60 pb-2.5">
+                <span className="text-slate-400">Soil Texture</span>
+                <span className="font-bold text-white capitalize">{inputs.soilType} Soil</span>
+              </div>
+              <div className="flex items-center justify-between text-xs border-b border-slate-800/60 pb-2.5">
+                <span className="text-slate-400">Soil Organic Carbon</span>
+                <span className="font-bold text-emerald-400">{(inputs.soc || 1.5).toFixed(1)} %</span>
+              </div>
+              <div className="flex items-center justify-between text-xs border-b border-slate-800/60 pb-2.5">
+                <span className="text-slate-400">Soil Salinity EC</span>
+                <span className="font-bold text-cyan-400">{(inputs.ec || 1.0).toFixed(1)} dS/m</span>
+              </div>
+              <div className="flex items-center justify-between text-xs border-b border-slate-800/60 pb-2.5">
+                <span className="text-slate-400">Soil pH</span>
+                <span className="font-bold text-teal-300">pH {(inputs.ph || 6.8).toFixed(1)}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs border-b border-slate-800/60 pb-2.5">
+                <span className="text-slate-400">Farming Method</span>
+                <span className="font-bold text-white capitalize">{inputs.farmingType}</span>
+              </div>
+            </div>
+
+            {/* Quick 7-Day Water Stat Badge */}
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-950/60 to-cyan-950/60 border border-emerald-500/30 space-y-1">
+              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
+                Daily Irrigation Water Demand
+              </span>
+              <div className="text-xl font-extrabold text-white">
+                {(water.weatherAdjustedDailyLiters / 1000).toFixed(1)} m³/day
+              </div>
+              <p className="text-[10px] text-slate-400">
+                Weather adjusted for rainfall & evapotranspiration.
+              </p>
+            </div>
+
             <button
-              className="btn-ghost flex items-center gap-2 text-sm py-2.5 px-4"
-              onClick={() => setStep((s) => Math.max(1, s - 1))}
-              disabled={step === 1}
-              style={{ opacity: step === 1 ? 0.4 : 1 }}
+              type="submit"
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition-all cursor-pointer flex items-center justify-center gap-2"
             >
-              <ChevronLeft size={16} />
-              Back
+              <Zap className="w-4 h-4 fill-current" />
+              <span>Simulate Agronomic Yield</span>
             </button>
-
-            <div className="text-xs text-[#9ca3af] font-medium">Step {step} of 3</div>
-
-            {step < 3 ? (
-              <motion.button
-                className="btn-primary flex items-center gap-2 text-sm py-2.5 px-6"
-                onClick={() => setStep((s) => Math.min(3, s + 1))}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.97 }}
-              >
-                Continue
-                <ChevronRight size={16} />
-              </motion.button>
-            ) : (
-              <motion.button
-                className="btn-primary flex items-center gap-2 text-sm py-2.5 px-6"
-                onClick={handleSubmit}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.97 }}
-                style={{ background: 'linear-gradient(135deg, #1a2e1a, #4a7c59)' }}
-              >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M8 1.5L2 6.5v8h12v-8L8 1.5z" stroke="white" strokeWidth="1.5" strokeLinejoin="round"/>
-                  <path d="M6 14.5v-5h4v5" stroke="white" strokeWidth="1.5" strokeLinejoin="round"/>
-                </svg>
-                Analyze My Farm
-              </motion.button>
-            )}
           </div>
-        </motion.div>
-      </div>
-    </section>
+        </div>
+      </form>
+    </div>
   );
-}
+};
+
+export default FarmAnalysisForm;
+
