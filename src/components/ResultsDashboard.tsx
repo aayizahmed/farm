@@ -356,38 +356,95 @@ function SoilPanel({ result }: { result: AnalysisResult }) {
 
 // Farm plan timeline
 function FarmPlan({ result }: { result: AnalysisResult }) {
-  return (
-    <div className="space-y-0">
-      {result.farmPlan.map((week, i) => (
-        <motion.div
-          key={week.week}
-          className="flex gap-5"
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: i * 0.1 }}
-        >
-          {/* Timeline */}
-          <div className="flex flex-col items-center flex-shrink-0">
-            <div
-              className="w-10 h-10 rounded-full flex items-center justify-center text-base z-10 relative"
-              style={{ background: 'linear-gradient(135deg, #2d4a2d, #4a7c59)' }}
-            >
-              {week.icon}
-            </div>
-            {i < result.farmPlan.length - 1 && (
-              <div className="w-px flex-1 my-1" style={{ background: 'linear-gradient(180deg, #4a7c59 0%, #e5e3de 100%)', minHeight: 24 }} />
-            )}
-          </div>
+  const [completedWeeks, setCompletedWeeks] = useState<Record<string, boolean>>({});
 
-          {/* Content */}
-          <div className="pb-6 flex-1">
-            <div className="text-xs font-bold text-[#4a7c59] uppercase tracking-wider mb-0.5">{week.week}</div>
-            <h4 className="font-bold text-[#1a2e1a] text-base mb-1">{week.label}</h4>
-            <p className="text-sm text-[#6b7280] font-medium mb-1.5">{week.activity}</p>
-            <p className="text-xs text-[#9ca3af] leading-relaxed">{week.details}</p>
+  const toggleWeek = (weekKey: string) => {
+    setCompletedWeeks((prev) => ({ ...prev, [weekKey]: !prev[weekKey] }));
+  };
+
+  const completedCount = Object.values(completedWeeks).filter(Boolean).length;
+  const totalCount = result.farmPlan.length;
+  const progressPct = Math.round((completedCount / totalCount) * 100);
+
+  return (
+    <div className="space-y-6">
+      {/* Progress & Operational Header */}
+      <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-950 to-slate-900 border border-emerald-500/30 text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg">
+        <div>
+          <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block">
+            Commercial Season Plan · 16-Week Execution Roadmap
+          </span>
+          <h4 className="text-lg font-bold text-white mt-0.5">
+            Operational Plan for {result.cropResults[0]?.crop.name || 'Primary Crop'} ({result.inputs.farmArea} Acres)
+          </h4>
+          <p className="text-xs text-slate-300 mt-1">
+            Check off weekly milestones as field operations progress.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-4 shrink-0">
+          <div className="text-right">
+            <span className="text-xs text-slate-400 block font-semibold">Season Progress</span>
+            <span className="text-xl font-black text-emerald-400 font-mono">{completedCount} / {totalCount} Done ({progressPct}%)</span>
           </div>
-        </motion.div>
-      ))}
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-all cursor-pointer shadow-md"
+          >
+            Export Execution Plan
+          </button>
+        </div>
+      </div>
+
+      {/* Timeline Steps */}
+      <div className="space-y-4">
+        {result.farmPlan.map((week, i) => {
+          const isDone = Boolean(completedWeeks[week.week]);
+          return (
+            <motion.div
+              key={week.week}
+              className={`rounded-2xl p-5 border transition-all ${
+                isDone
+                  ? 'bg-emerald-50/40 border-emerald-300 opacity-90'
+                  : 'bg-white border-[#e5e3de] hover:border-emerald-500/50 shadow-sm'
+              }`}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-4">
+                  <button
+                    type="button"
+                    onClick={() => toggleWeek(week.week)}
+                    className={`w-7 h-7 rounded-lg border flex items-center justify-center transition-all cursor-pointer mt-0.5 ${
+                      isDone
+                        ? 'bg-emerald-600 border-emerald-600 text-white'
+                        : 'border-slate-300 text-transparent hover:border-emerald-500'
+                    }`}
+                  >
+                    ✓
+                  </button>
+
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-[#4a7c59] uppercase tracking-wider">{week.week}</span>
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                        {week.label}
+                      </span>
+                    </div>
+                    <h4 className={`font-bold text-base mt-1 ${isDone ? 'line-through text-slate-500' : 'text-[#1a2e1a]'}`}>
+                      {week.activity}
+                    </h4>
+                    <p className="text-xs text-[#6b7280] leading-relaxed mt-1 font-medium">{week.details}</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
     </div>
   );
 }

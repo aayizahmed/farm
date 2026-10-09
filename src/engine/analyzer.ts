@@ -229,49 +229,87 @@ function analyzeSoil(inputs: FarmInputs): SoilAnalysis {
 // --- Farm Plan Generator ---
 
 function generateFarmPlan(topCrop: CropRequirements, inputs: FarmInputs): FarmPlanWeek[] {
+    const isAcidic = inputs.ph < 6.2;
+  const isAlkaline = inputs.ph > 7.6;
+  const nDeficit = inputs.nitrogen < 120;
+  const pDeficit = inputs.phosphorus < 45;
+  const kDeficit = inputs.potassium < 120;
+
   return [
     {
-      week: 'Week 1–2',
-      label: 'Soil Preparation',
-      activity: 'Land clearing, deep ploughing, and pH correction',
-      details: `Apply lime or sulfur amendments based on pH (${inputs.ph}). Deep-till to 25–30 cm. Incorporate basal organic matter.`,
+      week: 'Week 1',
+      label: 'Land Clearing & Soil Tillage',
+      activity: 'Deep subsoil tillage & root zone aeration',
+      details: `Deep-till farm area (${inputs.farmArea} Acres) to 30 cm depth. Remove weeds and crop residue. Prepare laser-leveled seedbeds for optimal drainage.`,
       icon: 'layers',
     },
     {
-      week: 'Week 3',
-      label: 'Nutrient Basal Dose',
-      activity: 'Apply starter fertilizers and soil conditioners',
-      details: `Apply ${topCrop.nutrients.P === 'high' ? 'DAP @ 50 kg/ha' : 'SSP @ 40 kg/ha'} and potash @ 30 kg/ha as basal dose. Mix into soil before bed formation.`,
+      week: 'Week 2',
+      label: 'pH Correction & Organic Matter',
+      activity: 'Basal pH balancing & bio-char compost incorporation',
+      details: isAcidic
+        ? `Apply Agricultural Lime (CaCO3 @ 2.5 Tons/ha) to raise soil pH from ${inputs.ph} to optimal range.`
+        : isAlkaline
+        ? `Apply Elemental Sulfur (@ 500 kg/ha) or Gypsum to correct alkaline pH (${inputs.ph}).`
+        : `Soil pH (${inputs.ph}) is balanced. Incorporate 5 Tons/ha of well-decomposed organic compost to boost SOC.`,
       icon: 'test-tube',
     },
     {
-      week: 'Week 4',
-      label: 'Planting',
-      activity: `Transplanting or sowing ${topCrop.name}`,
-      details: `Prepare raised beds or ridges. Plant ${topCrop.name} seedlings/seeds at recommended spacing. Ensure adequate base moisture.`,
-      icon: 'sprout',
-    },
-    {
-      week: 'Week 5–8',
-      label: 'Vegetative Growth',
-      activity: 'Irrigation, weeding, and first top-dress',
-      details: `Irrigate at ${inputs.moisture < 40 ? 5 : 7}-day intervals. Apply 1/3 nitrogen top-dress at 3–4 weeks after planting. Monitor for early pests.`,
+      week: 'Week 3',
+      label: 'Nutrient Basal Application',
+      activity: 'Basal NPK fertilizer blend & drip line installation',
+      details: `Incorporate basal nutrient dosage: ${pDeficit ? 'DAP @ 60 kg/ha' : 'SSP @ 40 kg/ha'} and ${kDeficit ? 'MOP @ 40 kg/ha' : 'Potassium Nitrate @ 25 kg/ha'}. Lay drip emitter lines at 40 cm spacing.`,
       icon: 'droplets',
     },
     {
-      week: 'Week 9–12',
-      label: 'Nutrient Management',
-      activity: 'Micronutrient sprays and growth monitoring',
-      details: `Foliar spray of micronutrients (Zn, B) if deficiency symptoms appear. Second top-dressing of N if needed. Stake or train plants.`,
+      week: 'Week 4',
+      label: 'Precision Sowing & Seed Treatment',
+      activity: `Sowing / Transplanting ${topCrop.name} seeds`,
+      details: `Treat certified ${topCrop.name} seeds with Trichoderma & Rhizobium bio-fungicide. Sow at recommended seed rate into moist seedbed rows.`,
+      icon: 'sprout',
+    },
+    {
+      week: 'Week 5 - 6',
+      label: 'Germination & Root Establishment',
+      activity: 'Light fertigation & weed control',
+      details: `Maintain 60% field moisture capacity with short 20-minute daily drip irrigation cycles. Apply pre-emergence organic herbicide.`,
+      icon: 'droplets',
+    },
+    {
+      week: 'Week 7 - 8',
+      label: 'Vegetative Canopy Growth',
+      activity: 'Nitrogen fertigation top-dressing',
+      details: `${nDeficit ? 'Top-dress Urea @ 45 kg/ha' : 'Apply balanced NPK 19-19-19 foliar spray'} to accelerate vegetative canopy branching and leaf chlorophyll.`,
       icon: 'activity',
     },
     {
-      week: 'Week 13+',
-      label: 'Harvest Preparation',
-      activity: `Harvesting ${topCrop.name} and post-harvest soil management`,
-      details: `Harvest at optimal maturity stage. Remove crop debris. Consider green manure incorporation to restore soil organic matter.`,
-      icon: 'container',
+      week: 'Week 9 - 10',
+      label: 'Micronutrient & Soil Health Check',
+      activity: 'Zinc, Boron & Iron foliar spray',
+      details: 'Spray Zinc Sulfate (0.5%) + Boron (0.2%) to prevent micro-deficiencies. Scout field weekly for stem borers or foliar blight.',
+      icon: 'shield-alert',
     },
+    {
+      week: 'Week 11 - 12',
+      label: 'Flowering & Grain/Fruit Initiation',
+      activity: 'Potassium boost & moisture stress avoidance',
+      details: `Inject Potassium Nitrate (13-0-45 @ 25 kg/ha) through drip fertigation. Ensure steady irrigation during pollination to prevent flower drop.`,
+      icon: 'sun',
+    },
+    {
+      week: 'Week 13 - 14',
+      label: 'Yield Fill & Pest Shield',
+      activity: 'Fruit/Grain density optimization',
+      details: 'Maintain regulated deficit irrigation (RDI) to maximize sugar/starch accumulation. Deploy yellow sticky traps for pest control.',
+      icon: 'check-circle',
+    },
+    {
+      week: 'Week 15 - 16',
+      label: 'Harvest Maturity & Post-Harvest Storage',
+      activity: `Harvesting ${topCrop.name} & crop rotation prep`,
+      details: `Harvest ${topCrop.name} at peak physiological maturity. Transfer yield to moisture-controlled storage. Prepare soil for next rotation crop.`,
+      icon: 'check-circle2',
+    }
   ];
 }
 

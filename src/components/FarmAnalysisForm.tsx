@@ -256,6 +256,58 @@ const WATER_SOURCES: { id: WaterSource; label: string }[] = [
 
   const [validationError, setValidationError] = useState<string | null>(null);
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 120, behavior: 'smooth' });
+  };
+
+  const handleNextStep = () => {
+    setValidationError(null);
+    if (activeStep === 0) {
+      setActiveStep(1);
+      scrollToTop();
+      return;
+    }
+    if (activeStep === 1) {
+      if (!isStep1Valid) {
+        setValidationError("Step 1 Incomplete: Please specify farm location, land area, and crop category.");
+        return;
+      }
+      setActiveStep(2);
+      scrollToTop();
+      return;
+    }
+    if (activeStep === 2) {
+      if (!isStep2Valid) {
+        setValidationError("Step 2 Incomplete: Please configure soil type, NPK nutrient values, and pH balance.");
+        return;
+      }
+      setActiveStep(3);
+      scrollToTop();
+      return;
+    }
+    if (activeStep === 3) {
+      if (!isStep3Valid) {
+        setValidationError("Step 3 Incomplete: Please select water source, irrigation model, and land topography.");
+        return;
+      }
+      setActiveStep(4);
+      scrollToTop();
+      return;
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (activeStep < 4) {
+        handleNextStep();
+      } else {
+        handleSubmit(e as any);
+      }
+    }
+  };
+
+
   const inputForecast: InputForecast = useMemo(() => {
     return predictFullFarmInputs(inputs);
   }, [inputs]);
@@ -384,7 +436,7 @@ const WATER_SOURCES: { id: WaterSource; label: string }[] = [
       </div>
 
       {/* Main Form Body */}
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="space-y-8">
 
         {/* VALIDATION ERROR ALERT BANNER */}
         {validationError && (
@@ -748,7 +800,7 @@ const WATER_SOURCES: { id: WaterSource; label: string }[] = [
                       </button>
                       <button
                         type="button"
-                        onClick={() => setActiveStep(2)}
+                        onClick={handleNextStep}
                         className="px-6 py-3 rounded-xl bg-emerald-500 text-slate-950 font-bold hover:bg-emerald-400 transition-all flex items-center gap-2 text-sm cursor-pointer"
                       >
                         <span>Proceed to Agronomy</span>
@@ -905,7 +957,7 @@ const WATER_SOURCES: { id: WaterSource; label: string }[] = [
                       </button>
                       <button
                         type="button"
-                        onClick={() => setActiveStep(3)}
+                        onClick={handleNextStep}
                         className="px-6 py-3 rounded-xl bg-emerald-500 text-slate-950 font-bold hover:bg-emerald-400 transition-all flex items-center gap-2 text-sm cursor-pointer"
                       >
                         <span>Proceed to Irrigation</span>
@@ -996,7 +1048,7 @@ const WATER_SOURCES: { id: WaterSource; label: string }[] = [
                     <div className="flex justify-between pt-4 border-t border-slate-800">
                       <button
                         type="button"
-                        onClick={() => setActiveStep(2)}
+                        onClick={handleNextStep}
                         className="px-5 py-2.5 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 transition-all flex items-center gap-2 text-sm cursor-pointer"
                       >
                         <ArrowLeft className="w-4 h-4" />
@@ -1004,7 +1056,7 @@ const WATER_SOURCES: { id: WaterSource; label: string }[] = [
                       </button>
                       <button
                         type="button"
-                        onClick={() => setActiveStep(4)}
+                        onClick={handleNextStep}
                         className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-bold hover:from-emerald-400 hover:to-cyan-400 transition-all flex items-center gap-2 text-sm cursor-pointer"
                       >
                         <span>View Weather & Forecast Quantities</span>
@@ -1222,7 +1274,7 @@ const WATER_SOURCES: { id: WaterSource; label: string }[] = [
                 <div className="pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
                   <button
                     type="button"
-                    onClick={() => setActiveStep(3)}
+                    onClick={handleNextStep}
                     className="w-full sm:w-auto px-5 py-3 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
                   >
                     <ArrowLeft className="w-4 h-4" />
