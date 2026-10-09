@@ -1,3 +1,4 @@
+import WhatIfSimulator from './WhatIfSimulator';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { AnalysisResult, CropResult } from '../types';
@@ -875,18 +876,21 @@ export default function ResultsDashboard({ result, onReset }: ResultsDashboardPr
 
         {/* 3D SIMULATOR TAB */}
         {activeTab === 'simulator' && (
-          <motion.div key="simulator" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <motion.div key="simulator" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
             <div className="mb-6">
-              <h3 className="text-xl font-bold text-[#1a2e1a]">Interactive Growth Simulation</h3>
+              <h3 className="text-2xl font-extrabold text-[#1a2e1a]">3D Crop & Agronomic What-If Simulator</h3>
               <p className="text-sm text-[#6b7280] mt-1">
-                Visualizing the 120-day growth cycle of your most recommended crop under predicted conditions.
+                Visualizing growth cycles and simulating real-time soil chemistry modifications.
               </p>
             </div>
-            <div className="h-[500px] w-full">
+            <div className="h-[500px] w-full bg-white rounded-3xl p-4 border border-[#e5e3de]">
               <Crop3DViewer 
                 cropName={result.cropResults[0].crop.name} 
                 suitabilityScore={result.cropResults[0].score} 
               />
+            </div>
+            <div className="pt-4">
+              <WhatIfSimulator baseInputs={result.inputs} />
             </div>
           </motion.div>
         )}

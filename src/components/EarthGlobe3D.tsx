@@ -10,9 +10,9 @@ import {
 
 export interface DistrictSpot {
   id: string;
-  name: string;              // District / County name (e.g. Ludhiana, Fresno County, Sorriso, Almería)
-  state: string;             // State / Province name (e.g. Punjab, California, Mato Grosso, Andalusia)
-  country: string;           // Country name (e.g. India, United States, Brazil, Spain)
+  name: string;              // District / County name
+  state: string;             // State / Province name
+  country: string;           // Country name
   countryFlag: string;
   region: string;            // Continent region
   lat: number;
@@ -33,282 +33,176 @@ export interface DistrictSpot {
 }
 
 export const DISTRICT_SPOTS: DistrictSpot[] = [
-  // --- INDIA: PUNJAB ---
+  // ==================== INDIA (COMPREHENSIVE COVERAGE) ====================
+  // --- PUNJAB ---
   {
-    id: 'ind_pb_ldh',
-    name: 'Ludhiana District',
-    state: 'Punjab',
-    country: 'India',
-    countryFlag: '🇮🇳',
-    region: 'Asia',
-    lat: 30.90,
-    lon: 75.85,
-    cropCategory: 'Grains',
-    primaryCrops: ['Basmati Rice', 'PBW-1 Wheat', 'Sugarcane', 'Potato'],
-    climateZone: 'Subtropical Alluvial Plain',
-    soilType: 'silt', ph: 7.4, nitrogen: 145, phosphorus: 48, potassium: 55, moisture: 58, temperature: 19, rainfall: 680, soc: 0.9, ec: 0.8
+    id: 'ind_pb_ldh', name: 'Ludhiana District', state: 'Punjab', country: 'India', countryFlag: '🇮🇳', region: 'Asia',
+    lat: 30.90, lon: 75.85, cropCategory: 'Grains', primaryCrops: ['Basmati Rice', 'PBW-1 Wheat', 'Sugarcane', 'Potato'],
+    climateZone: 'Subtropical Alluvial Plain', soilType: 'silt', ph: 7.4, nitrogen: 145, phosphorus: 48, potassium: 55, moisture: 58, temperature: 19, rainfall: 680, soc: 0.9, ec: 0.8
   },
   {
-    id: 'ind_pb_asr',
-    name: 'Amritsar District',
-    state: 'Punjab',
-    country: 'India',
-    countryFlag: '🇮🇳',
-    region: 'Asia',
-    lat: 31.63,
-    lon: 74.87,
-    cropCategory: 'Grains',
-    primaryCrops: ['Organic Rice', 'Rabi Wheat', 'Mustard', 'Maize'],
-    climateZone: 'Indo-Gangetic Basin',
-    soilType: 'loamy', ph: 7.3, nitrogen: 140, phosphorus: 45, potassium: 50, moisture: 55, temperature: 18, rainfall: 650, soc: 1.0, ec: 0.7
+    id: 'ind_pb_asr', name: 'Amritsar District', state: 'Punjab', country: 'India', countryFlag: '🇮🇳', region: 'Asia',
+    lat: 31.63, lon: 74.87, cropCategory: 'Grains', primaryCrops: ['Organic Basmati', 'Rabi Wheat', 'Mustard', 'Maize'],
+    climateZone: 'Indo-Gangetic Basin', soilType: 'loamy', ph: 7.3, nitrogen: 140, phosphorus: 45, potassium: 50, moisture: 55, temperature: 18, rainfall: 650, soc: 1.0, ec: 0.7
+  },
+  {
+    id: 'ind_pb_jal', name: 'Jalandhar District', state: 'Punjab', country: 'India', countryFlag: '🇮🇳', region: 'Asia',
+    lat: 31.32, lon: 75.57, cropCategory: 'Vegetables', primaryCrops: ['Seed Potato', 'Wheat', 'Paddy', 'Sunflower'],
+    climateZone: 'Doaba Alluvial Plain', soilType: 'loamy', ph: 7.2, nitrogen: 150, phosphorus: 50, potassium: 60, moisture: 56, temperature: 19, rainfall: 700, soc: 1.1, ec: 0.7
+  },
+  {
+    id: 'ind_pb_btd', name: 'Bathinda District', state: 'Punjab', country: 'India', countryFlag: '🇮🇳', region: 'Asia',
+    lat: 30.21, lon: 74.94, cropCategory: 'Commercial', primaryCrops: ['Bt Cotton', 'Wheat', 'Guar', 'Kinnow Citrus'],
+    climateZone: 'Semi-Arid Malwa Cotton Belt', soilType: 'sandy', ph: 7.9, nitrogen: 120, phosphorus: 40, potassium: 65, moisture: 42, temperature: 22, rainfall: 420, soc: 0.7, ec: 1.1
   },
 
-  // --- INDIA: MAHARASHTRA ---
+  // --- HARYANA ---
   {
-    id: 'ind_mh_nsk',
-    name: 'Nashik District',
-    state: 'Maharashtra',
-    country: 'India',
-    countryFlag: '🇮🇳',
-    region: 'Asia',
-    lat: 19.99,
-    lon: 73.78,
-    cropCategory: 'Spices',
-    primaryCrops: ['Table Grapes', 'Red Onions', 'Pomegranate', 'Tomatoes'],
-    climateZone: 'Deccan Semi-Arid Basin',
-    soilType: 'black', ph: 7.7, nitrogen: 115, phosphorus: 42, potassium: 185, moisture: 45, temperature: 27, rainfall: 710, soc: 1.2, ec: 1.0
+    id: 'ind_hr_knl', name: 'Karnal District (Rice Basin)', state: 'Haryana', country: 'India', countryFlag: '🇮🇳', region: 'Asia',
+    lat: 29.68, lon: 76.99, cropCategory: 'Grains', primaryCrops: ['Export Basmati Rice', 'High-Yield Wheat', 'Mustard', 'Sugarcane'],
+    climateZone: 'Indo-Gangetic Basin', soilType: 'silt', ph: 7.5, nitrogen: 142, phosphorus: 46, potassium: 52, moisture: 58, temperature: 20, rainfall: 710, soc: 0.95, ec: 0.8
   },
   {
-    id: 'ind_mh_pne',
-    name: 'Pune District',
-    state: 'Maharashtra',
-    country: 'India',
-    countryFlag: '🇮🇳',
-    region: 'Asia',
-    lat: 18.52,
-    lon: 73.85,
-    cropCategory: 'Vegetables',
-    primaryCrops: ['Sugarcane', 'Floriculture', 'Polyhouse Vegetables', 'Ginger'],
-    climateZone: 'Western Ghats Subtropical',
-    soilType: 'black', ph: 7.5, nitrogen: 125, phosphorus: 46, potassium: 160, moisture: 50, temperature: 25, rainfall: 780, soc: 1.4, ec: 0.9
+    id: 'ind_hr_hsr', name: 'Hisar District', state: 'Haryana', country: 'India', countryFlag: '🇮🇳', region: 'Asia',
+    lat: 29.15, lon: 75.71, cropCategory: 'Commercial', primaryCrops: ['Cotton', 'Pearl Millet (Bajra)', 'Wheat', 'Gram'],
+    climateZone: 'Semi-Arid Western Plains', soilType: 'sandy', ph: 7.8, nitrogen: 115, phosphorus: 38, potassium: 70, moisture: 40, temperature: 23, rainfall: 450, soc: 0.65, ec: 1.0
   },
 
-  // --- INDIA: KARNATAKA ---
+  // --- UTTAR PRADESH ---
   {
-    id: 'ind_ka_mnd',
-    name: 'Mandya District (Cauvery Basin)',
-    state: 'Karnataka',
-    country: 'India',
-    countryFlag: '🇮🇳',
-    region: 'Asia',
-    lat: 12.52,
-    lon: 76.89,
-    cropCategory: 'Commercial',
-    primaryCrops: ['Sugarcane', 'Paddy Rice', 'Coconut', 'Ragi'],
-    climateZone: 'Tropical River Basin',
-    soilType: 'red', ph: 6.8, nitrogen: 130, phosphorus: 40, potassium: 140, moisture: 60, temperature: 26, rainfall: 850, soc: 1.5, ec: 0.6
+    id: 'ind_up_mrt', name: 'Meerut District (Sugar Belt)', state: 'Uttar Pradesh', country: 'India', countryFlag: '🇮🇳', region: 'Asia',
+    lat: 28.98, lon: 77.70, cropCategory: 'Commercial', primaryCrops: ['Sugarcane', 'High-Yield Wheat', 'Mustard', 'Mango'],
+    climateZone: 'Upper Doab Alluvial Basin', soilType: 'silt', ph: 7.2, nitrogen: 155, phosphorus: 52, potassium: 60, moisture: 62, temperature: 21, rainfall: 840, soc: 1.1, ec: 0.7
+  },
+  {
+    id: 'ind_up_vns', name: 'Varanasi District', state: 'Uttar Pradesh', country: 'India', countryFlag: '🇮🇳', region: 'Asia',
+    lat: 25.31, lon: 82.97, cropCategory: 'Vegetables', primaryCrops: ['Paddy Rice', 'Vegetables', 'Wheat', 'Pulses'],
+    climateZone: 'Middle Ganges Plain', soilType: 'loamy', ph: 7.1, nitrogen: 130, phosphorus: 44, potassium: 55, moisture: 60, temperature: 24, rainfall: 1020, soc: 1.0, ec: 0.6
   },
 
-  // --- INDIA: GUJARAT ---
+  // --- MAHARASHTRA ---
   {
-    id: 'ind_gj_and',
-    name: 'Anand District (Milk & Agri Hub)',
-    state: 'Gujarat',
-    country: 'India',
-    countryFlag: '🇮🇳',
-    region: 'Asia',
-    lat: 22.56,
-    lon: 72.92,
-    cropCategory: 'Commercial',
-    primaryCrops: ['Tobacco', 'Banana', 'Dairy Feed Pasture', 'Castor'],
-    climateZone: 'Charotar Alluvial Zone',
-    soilType: 'loamy', ph: 7.6, nitrogen: 135, phosphorus: 50, potassium: 155, moisture: 52, temperature: 28, rainfall: 800, soc: 1.1, ec: 0.9
+    id: 'ind_mh_nsk', name: 'Nashik District (Grape & Onion Hub)', state: 'Maharashtra', country: 'India', countryFlag: '🇮🇳', region: 'Asia',
+    lat: 19.99, lon: 73.78, cropCategory: 'Spices', primaryCrops: ['Export Table Grapes', 'Red Onions', 'Pomegranate', 'Tomatoes'],
+    climateZone: 'Deccan Semi-Arid Basin', soilType: 'black', ph: 7.7, nitrogen: 115, phosphorus: 42, potassium: 185, moisture: 45, temperature: 27, rainfall: 710, soc: 1.2, ec: 1.0
+  },
+  {
+    id: 'ind_mh_pne', name: 'Pune District', state: 'Maharashtra', country: 'India', countryFlag: '🇮🇳', region: 'Asia',
+    lat: 18.52, lon: 73.85, cropCategory: 'Vegetables', primaryCrops: ['Sugarcane', 'Floriculture', 'Polyhouse Peppers', 'Ginger'],
+    climateZone: 'Western Ghats Subtropical', soilType: 'black', ph: 7.5, nitrogen: 125, phosphorus: 46, potassium: 160, moisture: 50, temperature: 25, rainfall: 780, soc: 1.4, ec: 0.9
+  },
+  {
+    id: 'ind_mh_jlg', name: 'Jalgaon District (Banana Capital)', state: 'Maharashtra', country: 'India', countryFlag: '🇮🇳', region: 'Asia',
+    lat: 21.00, lon: 75.56, cropCategory: 'Orchard', primaryCrops: ['Grand Naine Banana', 'Cotton', 'Maize', 'Jowar'],
+    climateZone: 'Khandesh Alluvial Belt', soilType: 'black', ph: 7.6, nitrogen: 140, phosphorus: 48, potassium: 190, moisture: 55, temperature: 29, rainfall: 750, soc: 1.1, ec: 0.8
+  },
+  {
+    id: 'ind_mh_ngp', name: 'Nagpur District (Citrus Hub)', state: 'Maharashtra', country: 'India', countryFlag: '🇮🇳', region: 'Asia',
+    lat: 21.14, lon: 79.08, cropCategory: 'Orchard', primaryCrops: ['Nagpur Mandarin Orange', 'Soybean', 'Cotton', 'Tur (Arhar)'],
+    climateZone: 'Vidarbha Subtropical Plateau', soilType: 'black', ph: 7.4, nitrogen: 120, phosphorus: 40, potassium: 145, moisture: 48, temperature: 28, rainfall: 1100, soc: 1.3, ec: 0.6
   },
 
-  // --- UNITED STATES: CALIFORNIA ---
+  // --- KARNATAKA ---
   {
-    id: 'usa_ca_fre',
-    name: 'Fresno County',
-    state: 'California',
-    country: 'United States',
-    countryFlag: '🇺🇸',
-    region: 'North America',
-    lat: 36.74,
-    lon: -119.78,
-    cropCategory: 'Orchard',
-    primaryCrops: ['Almonds', 'Pistachios', 'Raisin Grapes', 'Tomatoes'],
-    climateZone: 'San Joaquin Valley Mediterranean',
-    soilType: 'loamy', ph: 6.8, nitrogen: 165, phosphorus: 58, potassium: 145, moisture: 45, temperature: 24, rainfall: 540, soc: 1.8, ec: 1.2
+    id: 'ind_ka_mnd', name: 'Mandya District (Cauvery Delta)', state: 'Karnataka', country: 'India', countryFlag: '🇮🇳', region: 'Asia',
+    lat: 12.52, lon: 76.89, cropCategory: 'Commercial', primaryCrops: ['Sugarcane', 'Paddy Rice', 'Coconut', 'Finger Millet (Ragi)'],
+    climateZone: 'Tropical River Basin', soilType: 'red', ph: 6.8, nitrogen: 130, phosphorus: 40, potassium: 140, moisture: 60, temperature: 26, rainfall: 850, soc: 1.5, ec: 0.6
   },
   {
-    id: 'usa_ca_tul',
-    name: 'Tulare County',
-    state: 'California',
-    country: 'United States',
-    countryFlag: '🇺🇸',
-    region: 'North America',
-    lat: 36.20,
-    lon: -119.34,
-    cropCategory: 'Orchard',
-    primaryCrops: ['Navel Oranges', 'Dairy Alfalfa', 'Table Grapes', 'Walnuts'],
-    climateZone: 'Valley Semi-Arid Drip',
-    soilType: 'silt', ph: 6.9, nitrogen: 155, phosphorus: 52, potassium: 150, moisture: 48, temperature: 25, rainfall: 520, soc: 1.7, ec: 1.1
+    id: 'ind_ka_ckm', name: 'Chikmagalur District (Coffee Estate)', state: 'Karnataka', country: 'India', countryFlag: '🇮🇳', region: 'Asia',
+    lat: 13.31, lon: 75.77, cropCategory: 'Commercial', primaryCrops: ['Arabica Coffee', 'Black Pepper', 'Cardamom', 'Arecanut'],
+    climateZone: 'Malnad Highland Rain Forest', soilType: 'red', ph: 5.9, nitrogen: 145, phosphorus: 52, potassium: 155, moisture: 68, temperature: 21, rainfall: 1900, soc: 2.7, ec: 0.3
   },
 
-  // --- UNITED STATES: IOWA ---
+  // --- GUJARAT ---
   {
-    id: 'usa_ia_polk',
-    name: 'Polk County (Corn Belt)',
-    state: 'Iowa',
-    country: 'United States',
-    countryFlag: '🇺🇸',
-    region: 'North America',
-    lat: 41.68,
-    lon: -93.57,
-    cropCategory: 'Grains',
-    primaryCrops: ['Yellow Dent Corn', 'Soybeans', 'Oats', 'Pork Feed'],
-    climateZone: 'Humid Continental Prairie',
-    soilType: 'black', ph: 6.7, nitrogen: 170, phosphorus: 60, potassium: 140, moisture: 60, temperature: 18, rainfall: 910, soc: 3.2, ec: 0.5
+    id: 'ind_gj_and', name: 'Anand District (Milk & Tobacco Belt)', state: 'Gujarat', country: 'India', countryFlag: '🇮🇳', region: 'Asia',
+    lat: 22.56, lon: 72.92, cropCategory: 'Commercial', primaryCrops: ['Tobacco', 'Banana', 'Pasture Fodder', 'Castor'],
+    climateZone: 'Charotar Alluvial Zone', soilType: 'loamy', ph: 7.6, nitrogen: 135, phosphorus: 50, potassium: 155, moisture: 52, temperature: 28, rainfall: 800, soc: 1.1, ec: 0.9
+  },
+  {
+    id: 'ind_gj_ktc', name: 'Kutch District (Dates & Pomegranate)', state: 'Gujarat', country: 'India', countryFlag: '🇮🇳', region: 'Asia',
+    lat: 23.24, lon: 69.66, cropCategory: 'Orchard', primaryCrops: ['Fresh Dates', 'Bhagwa Pomegranate', 'Castor', 'Cotton'],
+    climateZone: 'Arid Coastal Desert', soilType: 'sandy', ph: 8.1, nitrogen: 95, phosphorus: 35, potassium: 160, moisture: 35, temperature: 30, rainfall: 340, soc: 0.5, ec: 2.2
   },
 
-  // --- BRAZIL: MATO GROSSO ---
+  // --- TAMIL NADU ---
   {
-    id: 'bra_mt_srr',
-    name: 'Sorriso District (Soybean Capital)',
-    state: 'Mato Grosso',
-    country: 'Brazil',
-    countryFlag: '🇧🇷',
-    region: 'South America',
-    lat: -12.54,
-    lon: -55.71,
-    cropCategory: 'Commercial',
-    primaryCrops: ['GMO Soybeans', 'Safrinha Maize', 'Cotton', 'Sunflower'],
-    climateZone: 'Tropical Savanna Cerrado',
-    soilType: 'red', ph: 5.8, nitrogen: 135, phosphorus: 52, potassium: 125, moisture: 65, temperature: 27, rainfall: 1750, soc: 2.2, ec: 0.4
+    id: 'ind_tn_tnj', name: 'Thanjavur District (Rice Granary)', state: 'Tamil Nadu', country: 'India', countryFlag: '🇮🇳', region: 'Asia',
+    lat: 10.78, lon: 79.13, cropCategory: 'Grains', primaryCrops: ['Samba Paddy Rice', 'Black Gram', 'Coconut', 'Sugarcane'],
+    climateZone: 'Cauvery Coastal Delta', soilType: 'clay', ph: 6.9, nitrogen: 135, phosphorus: 45, potassium: 130, moisture: 65, temperature: 29, rainfall: 1150, soc: 1.4, ec: 0.8
   },
   {
-    id: 'bra_sp_rp',
-    name: 'Ribeirão Preto District',
-    state: 'São Paulo',
-    country: 'Brazil',
-    countryFlag: '🇧🇷',
-    region: 'South America',
-    lat: -21.17,
-    lon: -47.81,
-    cropCategory: 'Commercial',
-    primaryCrops: ['Sugarcane Ethanol', 'Citrus Juice', 'Coffee', 'Peanuts'],
-    climateZone: 'Subtropical Paulista Highfield',
-    soilType: 'red', ph: 6.1, nitrogen: 140, phosphorus: 48, potassium: 145, moisture: 55, temperature: 23, rainfall: 1420, soc: 2.0, ec: 0.5
+    id: 'ind_tn_cbe', name: 'Coimbatore District', state: 'Tamil Nadu', country: 'India', countryFlag: '🇮🇳', region: 'Asia',
+    lat: 11.01, lon: 76.95, cropCategory: 'Commercial', primaryCrops: ['Cotton', 'Coconut', 'Turmeric', 'Maize'],
+    climateZone: 'Kongu Semi-Arid Plateau', soilType: 'red', ph: 7.4, nitrogen: 125, phosphorus: 42, potassium: 150, moisture: 48, temperature: 27, rainfall: 700, soc: 1.2, ec: 0.9
   },
 
-  // --- SPAIN: ANDALUSIA ---
+  // --- RAJASTHAN ---
   {
-    id: 'esp_an_alm',
-    name: 'Almería District (Sea of Plastic)',
-    state: 'Andalusia',
-    country: 'Spain',
-    countryFlag: '🇪🇸',
-    region: 'Europe',
-    lat: 36.83,
-    lon: -2.46,
-    cropCategory: 'Vegetables',
-    primaryCrops: ['Greenhouse Tomatoes', 'Cucumbers', 'Zucchini', 'Melons'],
-    climateZone: 'Mediterranean Subtropical Hydro',
-    soilType: 'chalky', ph: 7.7, nitrogen: 175, phosphorus: 65, potassium: 190, moisture: 40, temperature: 22, rainfall: 320, soc: 1.0, ec: 1.8
-  },
-  {
-    id: 'esp_an_jaen',
-    name: 'Jaén District (Olive Capital)',
-    state: 'Andalusia',
-    country: 'Spain',
-    countryFlag: '🇪🇸',
-    region: 'Europe',
-    lat: 37.77,
-    lon: -3.78,
-    cropCategory: 'Orchard',
-    primaryCrops: ['Picual Olives', 'Extra Virgin Olive Oil', 'Almonds'],
-    climateZone: 'Mediterranean Olive Hills',
-    soilType: 'chalky', ph: 7.8, nitrogen: 105, phosphorus: 38, potassium: 165, moisture: 38, temperature: 21, rainfall: 510, soc: 1.3, ec: 1.2
+    id: 'ind_rj_sgn', name: 'Sri Ganganagar District (Canal Oasis)', state: 'Rajasthan', country: 'India', countryFlag: '🇮🇳', region: 'Asia',
+    lat: 29.91, lon: 73.87, cropCategory: 'Grains', primaryCrops: ['Wheat', 'American Cotton', 'Kinnow Citrus', 'Mustard'],
+    climateZone: 'Indira Gandhi Canal Arid Basin', soilType: 'sandy', ph: 8.0, nitrogen: 120, phosphorus: 42, potassium: 135, moisture: 45, temperature: 26, rainfall: 280, soc: 0.6, ec: 1.3
   },
 
-  // --- NETHERLANDS: SOUTH HOLLAND ---
+  // --- KERALA ---
   {
-    id: 'nld_zh_west',
-    name: 'Westland District',
-    state: 'South Holland',
-    country: 'Netherlands',
-    countryFlag: '🇳🇱',
-    region: 'Europe',
-    lat: 51.99,
-    lon: 4.20,
-    cropCategory: 'Vegetables',
-    primaryCrops: ['Automated Tomatoes', 'Paprika', 'Cucumbers', 'Orchids'],
-    climateZone: 'Maritime Closed Glasshouse',
-    soilType: 'peat', ph: 6.0, nitrogen: 185, phosphorus: 75, potassium: 210, moisture: 75, temperature: 22, rainfall: 860, soc: 3.4, ec: 1.5
+    id: 'ind_kl_wyd', name: 'Wayanad District (Highland Spices)', state: 'Kerala', country: 'India', countryFlag: '🇮🇳', region: 'Asia',
+    lat: 11.68, lon: 76.13, cropCategory: 'Spices', primaryCrops: ['Malabar Black Pepper', 'Robusta Coffee', 'Cardamom', 'Tea'],
+    climateZone: 'Western Ghats Humid Highland', soilType: 'red', ph: 5.6, nitrogen: 150, phosphorus: 55, potassium: 160, moisture: 72, temperature: 22, rainfall: 2800, soc: 3.1, ec: 0.3
   },
 
-  // --- CHINA: SHANDONG ---
+  // --- WEST BENGAL ---
   {
-    id: 'chn_sd_sg',
-    name: 'Shouguang District (Vegetable Hub)',
-    state: 'Shandong',
-    country: 'China',
-    countryFlag: '🇨🇳',
-    region: 'Asia',
-    lat: 36.88,
-    lon: 118.74,
-    cropCategory: 'Vegetables',
-    primaryCrops: ['High-Tech Solar Vegetables', 'Cabbage', 'Garlic', 'Tomatoes'],
-    climateZone: 'Temperate Warm Monsoon',
-    soilType: 'loamy', ph: 7.1, nitrogen: 165, phosphorus: 62, potassium: 175, moisture: 60, temperature: 20, rainfall: 690, soc: 1.9, ec: 0.9
+    id: 'ind_wb_bdn', name: 'Burdwan District (Bengal Rice Hub)', state: 'West Bengal', country: 'India', countryFlag: '🇮🇳', region: 'Asia',
+    lat: 23.23, lon: 87.86, cropCategory: 'Grains', primaryCrops: ['Aman Paddy Rice', 'Boro Rice', 'Jute', 'Potato'],
+    climateZone: 'Gangetic Alluvial Delta', soilType: 'clay', ph: 6.4, nitrogen: 140, phosphorus: 48, potassium: 120, moisture: 70, temperature: 27, rainfall: 1500, soc: 1.8, ec: 0.5
   },
 
-  // --- KENYA: RIFT VALLEY ---
+  // --- MADHYA PRADESH ---
   {
-    id: 'ken_rv_ker',
-    name: 'Kericho District (Tea Capital)',
-    state: 'Rift Valley',
-    country: 'Kenya',
-    countryFlag: '🇰🇪',
-    region: 'Africa',
-    lat: -0.36,
-    lon: 35.28,
-    cropCategory: 'Commercial',
-    primaryCrops: ['Highland Black Tea', 'Pyrethrum', 'Maize', 'Dairy Feed'],
-    climateZone: 'Equatorial Highland Mist',
-    soilType: 'red', ph: 5.6, nitrogen: 145, phosphorus: 58, potassium: 135, moisture: 60, temperature: 20, rainfall: 1350, soc: 2.8, ec: 0.4
+    id: 'ind_mp_ind', name: 'Indore District (Malwa Soybean Belt)', state: 'Madhya Pradesh', country: 'India', countryFlag: '🇮🇳', region: 'Asia',
+    lat: 22.71, lon: 75.85, cropCategory: 'Commercial', primaryCrops: ['Yellow Soybean', 'Sharbati Wheat', 'Gram (Chickpea)', 'Garlic'],
+    climateZone: 'Malwa Subtropical Plateau', soilType: 'black', ph: 7.6, nitrogen: 130, phosphorus: 44, potassium: 150, moisture: 50, temperature: 24, rainfall: 980, soc: 1.5, ec: 0.6
   },
 
-  // --- AUSTRALIA: NEW SOUTH WALES ---
+  // --- ANDHRA PRADESH / TELANGANA ---
   {
-    id: 'aus_nsw_riv',
-    name: 'Griffith District (Riverina)',
-    state: 'New South Wales',
-    country: 'Australia',
-    countryFlag: '🇦🇺',
-    region: 'Oceania',
-    lat: -34.28,
-    lon: 146.04,
-    cropCategory: 'Commercial',
-    primaryCrops: ['Wine Grapes', 'Citrus', 'Cotton', 'Rice'],
-    climateZone: 'Semi-Arid Irrigated Riverina',
-    soilType: 'red', ph: 7.2, nitrogen: 130, phosphorus: 45, potassium: 155, moisture: 42, temperature: 23, rainfall: 430, soc: 1.4, ec: 1.1
+    id: 'ind_ap_gtr', name: 'Guntur District (Chilli Capital)', state: 'Andhra Pradesh', country: 'India', countryFlag: '🇮🇳', region: 'Asia',
+    lat: 16.30, lon: 80.44, cropCategory: 'Spices', primaryCrops: ['Red Chilli', 'Tobacco', 'Cotton', 'Paddy Rice'],
+    climateZone: 'Krishna Delta Alluvial Plain', soilType: 'black', ph: 7.7, nitrogen: 145, phosphorus: 50, potassium: 175, moisture: 55, temperature: 30, rainfall: 950, soc: 1.2, ec: 1.1
   },
 
-  // --- GERMANY: BAVARIA ---
+  // ==================== INTERNATIONAL HUBS ====================
   {
-    id: 'deu_by_hal',
-    name: 'Hallertau Hops District',
-    state: 'Bavaria',
-    country: 'Germany',
-    countryFlag: '🇩🇪',
-    region: 'Europe',
-    lat: 48.58,
-    lon: 11.66,
-    cropCategory: 'Commercial',
-    primaryCrops: ['Aroma Hops', 'Malting Barley', 'Wheat', 'Asparagus'],
-    climateZone: 'Central European Alpine Basin',
-    soilType: 'loamy', ph: 6.7, nitrogen: 145, phosphorus: 52, potassium: 145, moisture: 62, temperature: 16, rainfall: 890, soc: 2.5, ec: 0.5
+    id: 'usa_ca_fre', name: 'Fresno County', state: 'California', country: 'United States', countryFlag: '🇺🇸', region: 'North America',
+    lat: 36.74, lon: -119.78, cropCategory: 'Orchard', primaryCrops: ['Almonds', 'Pistachios', 'Raisin Grapes', 'Tomatoes'],
+    climateZone: 'San Joaquin Valley Mediterranean', soilType: 'loamy', ph: 6.8, nitrogen: 165, phosphorus: 58, potassium: 145, moisture: 45, temperature: 24, rainfall: 540, soc: 1.8, ec: 1.2
+  },
+  {
+    id: 'bra_mt_srr', name: 'Sorriso District', state: 'Mato Grosso', country: 'Brazil', countryFlag: '🇧🇷', region: 'South America',
+    lat: -12.54, lon: -55.71, cropCategory: 'Commercial', primaryCrops: ['GMO Soybeans', 'Safrinha Maize', 'Cotton', 'Sunflower'],
+    climateZone: 'Tropical Savanna Cerrado', soilType: 'red', ph: 5.8, nitrogen: 135, phosphorus: 52, potassium: 125, moisture: 65, temperature: 27, rainfall: 1750, soc: 2.2, ec: 0.4
+  },
+  {
+    id: 'esp_an_alm', name: 'Almería District', state: 'Andalusia', country: 'Spain', countryFlag: '🇪🇸', region: 'Europe',
+    lat: 36.83, lon: -2.46, cropCategory: 'Vegetables', primaryCrops: ['Greenhouse Tomatoes', 'Cucumbers', 'Zucchini', 'Melons'],
+    climateZone: 'Mediterranean Subtropical Hydro', soilType: 'chalky', ph: 7.7, nitrogen: 175, phosphorus: 65, potassium: 190, moisture: 40, temperature: 22, rainfall: 320, soc: 1.0, ec: 1.8
+  },
+  {
+    id: 'nld_zh_west', name: 'Westland District', state: 'South Holland', country: 'Netherlands', countryFlag: '🇳🇱', region: 'Europe',
+    lat: 51.99, lon: 4.20, cropCategory: 'Vegetables', primaryCrops: ['Automated Tomatoes', 'Paprika', 'Cucumbers', 'Orchids'],
+    climateZone: 'Maritime Closed Glasshouse', soilType: 'peat', ph: 6.0, nitrogen: 185, phosphorus: 75, potassium: 210, moisture: 75, temperature: 22, rainfall: 860, soc: 3.4, ec: 1.5
+  },
+  {
+    id: 'ken_rv_ker', name: 'Kericho District', state: 'Rift Valley', country: 'Kenya', countryFlag: '🇰🇪', region: 'Africa',
+    lat: -0.36, lon: 35.28, cropCategory: 'Commercial', primaryCrops: ['Highland Black Tea', 'Pyrethrum', 'Maize', 'Dairy Feed'],
+    climateZone: 'Equatorial Highland Mist', soilType: 'red', ph: 5.6, nitrogen: 145, phosphorus: 58, potassium: 135, moisture: 60, temperature: 20, rainfall: 1350, soc: 2.8, ec: 0.4
+  },
+  {
+    id: 'aus_nsw_riv', name: 'Griffith District', state: 'New South Wales', country: 'Australia', countryFlag: '🇦🇺', region: 'Oceania',
+    lat: -34.28, lon: 146.04, cropCategory: 'Commercial', primaryCrops: ['Wine Grapes', 'Citrus', 'Cotton', 'Rice'],
+    climateZone: 'Semi-Arid Irrigated Riverina', soilType: 'red', ph: 7.2, nitrogen: 130, phosphorus: 45, potassium: 155, moisture: 42, temperature: 23, rainfall: 430, soc: 1.4, ec: 1.1
   }
 ];
 
@@ -353,14 +247,12 @@ function HighDetailEarthMesh({
     }
   });
 
-  // Vector Texture with State Outlines & Lat/Lon Lines
   const detailedEarthTexture = useMemo(() => {
     const canvas = document.createElement('canvas');
     canvas.width = 2048;
     canvas.height = 1024;
     const ctx = canvas.getContext('2d')!;
 
-    // Ocean Gradient
     const bgGrad = ctx.createLinearGradient(0, 0, 0, 1024);
     bgGrad.addColorStop(0, '#020617');
     bgGrad.addColorStop(0.5, '#0b192c');
@@ -368,7 +260,6 @@ function HighDetailEarthMesh({
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, 2048, 1024);
 
-    // Latitude & Longitude Lines
     ctx.strokeStyle = 'rgba(56, 189, 248, 0.12)';
     ctx.lineWidth = 1;
     for (let y = 0; y < 1024; y += 64) {
@@ -384,22 +275,15 @@ function HighDetailEarthMesh({
       ctx.stroke();
     }
 
-    // Realistic Continent Vector Shapes
     ctx.fillStyle = 'rgba(16, 185, 129, 0.35)';
     ctx.strokeStyle = 'rgba(52, 211, 153, 0.7)';
     ctx.lineWidth = 2;
 
-    // Draw Landmass Polygons (North America, South America, Eurasia, Africa, Australia)
     const landmasses = [
-      // North America
       [[300, 150], [550, 180], [600, 320], [520, 450], [400, 480], [320, 350], [250, 220]],
-      // South America
       [[550, 520], [680, 560], [700, 750], [620, 920], [540, 800], [520, 620]],
-      // Eurasia
       [[1050, 120], [1750, 150], [1850, 380], [1600, 480], [1300, 450], [1150, 320], [1000, 220]],
-      // Africa
       [[950, 380], [1200, 420], [1250, 680], [1150, 850], [1000, 750], [920, 520]],
-      // Australia
       [[1600, 680], [1850, 700], [1880, 850], [1650, 880], [1580, 760]]
     ];
 
@@ -414,7 +298,6 @@ function HighDetailEarthMesh({
       ctx.stroke();
     });
 
-    // State / Province Border Outlines
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
     ctx.lineWidth = 1;
     ctx.setLineDash([4, 4]);
@@ -441,36 +324,19 @@ function HighDetailEarthMesh({
         }}
       >
         <sphereGeometry args={[2.5, 64, 64]} />
-        <meshStandardMaterial
-          map={detailedEarthTexture}
-          roughness={0.35}
-          metalness={0.2}
-        />
+        <meshStandardMaterial map={detailedEarthTexture} roughness={0.35} metalness={0.2} />
       </mesh>
 
-      {/* Cloud Layer */}
       <mesh ref={cloudsRef}>
         <sphereGeometry args={[2.54, 48, 48]} />
-        <meshStandardMaterial
-          color="#38bdf8"
-          transparent
-          opacity={0.12}
-          blending={THREE.AdditiveBlending}
-        />
+        <meshStandardMaterial color="#38bdf8" transparent opacity={0.12} blending={THREE.AdditiveBlending} />
       </mesh>
 
-      {/* Outer Glow */}
       <mesh>
         <sphereGeometry args={[2.65, 32, 32]} />
-        <meshBasicMaterial
-          color="#10b981"
-          transparent
-          opacity={0.08}
-          side={THREE.BackSide}
-        />
+        <meshBasicMaterial color="#10b981" transparent opacity={0.08} side={THREE.BackSide} />
       </mesh>
 
-      {/* District Hotspot Pins */}
       {DISTRICT_SPOTS.map((district) => {
         const pos = latLongToVector3(district.lat, district.lon, 2.55);
         const isSelected = selectedDistrict.id === district.id;
@@ -479,9 +345,7 @@ function HighDetailEarthMesh({
           <group key={district.id} position={pos}>
             <mesh onClick={() => onSelectDistrict(district)}>
               <sphereGeometry args={[isSelected ? 0.08 : 0.05, 16, 16]} />
-              <meshBasicMaterial
-                color={isSelected ? '#34d399' : '#10b981'}
-              />
+              <meshBasicMaterial color={isSelected ? '#34d399' : '#10b981'} />
             </mesh>
             {isSelected && (
               <mesh>
@@ -532,7 +396,7 @@ interface EarthGlobe3DProps {
 
 export const EarthGlobe3D: React.FC<EarthGlobe3DProps> = ({ onSelectCountry }) => {
   const [selectedDistrictId, setSelectedDistrictId] = useState<string>('ind_pb_ldh');
-  const [selectedCountryFilter, setSelectedCountryFilter] = useState<string>('All');
+  const [selectedCountryFilter, setSelectedCountryFilter] = useState<string>('India');
   const [selectedStateFilter, setSelectedStateFilter] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
@@ -612,7 +476,6 @@ export const EarthGlobe3D: React.FC<EarthGlobe3DProps> = ({ onSelectCountry }) =
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-2">
@@ -623,11 +486,10 @@ export const EarthGlobe3D: React.FC<EarthGlobe3DProps> = ({ onSelectCountry }) =
             Pinpoint Your Country, State & Local District
           </h2>
           <p className="text-xs md:text-sm text-slate-400 mt-1">
-            Browse state and district outlines across <strong className="text-emerald-400">{DISTRICT_SPOTS.length} Agricultural Districts & Counties</strong>.
+            Browse state and district outlines across <strong className="text-emerald-400">{DISTRICT_SPOTS.length} Agricultural Districts (Featuring All Major Indian States)</strong>.
           </p>
         </div>
 
-        {/* Hierarchical Filter Selectors */}
         <div className="flex items-center gap-3">
           <div>
             <label className="text-[10px] text-slate-400 block font-semibold mb-1">Country Filter</label>
@@ -660,9 +522,7 @@ export const EarthGlobe3D: React.FC<EarthGlobe3DProps> = ({ onSelectCountry }) =
         </div>
       </div>
 
-      {/* Main 3D Canvas & Selection Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-        {/* 3D Earth Globe Viewport */}
         <div className="lg:col-span-7 bg-slate-950/90 border border-slate-800/80 rounded-3xl h-[420px] md:h-[480px] relative overflow-hidden shadow-2xl flex items-center justify-center">
           <Canvas camera={{ position: [0, 0, 6.2], fov: 45 }}>
             <ambientLight intensity={0.7} />
@@ -691,22 +551,19 @@ export const EarthGlobe3D: React.FC<EarthGlobe3DProps> = ({ onSelectCountry }) =
           </div>
         </div>
 
-        {/* State / District Selection Panel */}
         <div className="lg:col-span-5 flex flex-col justify-between space-y-4 bg-slate-950/80 border border-slate-800 rounded-3xl p-5 md:p-6 backdrop-blur-xl">
           <div className="space-y-4">
-            {/* Search Input */}
             <div className="relative">
               <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-500" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search state, district, or crop..."
+                placeholder="Search Indian state, district, or crop..."
                 className="w-full pl-10 pr-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white placeholder-slate-500 text-xs focus:outline-none focus:border-emerald-500"
               />
             </div>
 
-            {/* District Scroll List */}
             <div className="max-h-[170px] overflow-y-auto space-y-1.5 pr-1 scrollbar-thin scrollbar-thumb-slate-800">
               {filteredDistricts.map((d) => {
                 const isSel = d.id === selectedDistrict.id;
@@ -734,7 +591,6 @@ export const EarthGlobe3D: React.FC<EarthGlobe3DProps> = ({ onSelectCountry }) =
               })}
             </div>
 
-            {/* Selected District Profile Display */}
             <motion.div
               key={selectedDistrict.id}
               initial={{ opacity: 0, scale: 0.96 }}

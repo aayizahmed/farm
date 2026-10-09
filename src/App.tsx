@@ -11,7 +11,6 @@ import HowItWorks from './components/HowItWorks';
 import FarmAnalysisForm from './components/FarmAnalysisForm';
 import AnalyzingScreen from './components/AnalyzingScreen';
 import ResultsDashboard from './components/ResultsDashboard';
-import WhatIfSimulator from './components/WhatIfSimulator';
 import Impact from './components/Impact';
 import CropSimulatorSection from './components/CropSimulatorSection';
 import FinalCTA from './components/FinalCTA';
@@ -132,7 +131,6 @@ export default function App() {
             className="pt-[70px]"
           >
             <ResultsDashboard result={analysisResult} onReset={handleReset} />
-            <WhatIfSimulator baseInputs={lastInputs ?? undefined} />
             <FinalCTA onAnalyzeClick={handleReset} />
             <Footer />
           </motion.div>
